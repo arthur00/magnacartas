@@ -52,7 +52,7 @@ var gainCard = function(cid) {
     start : function() {
       $(this).css("z-index", curZ++)
     },
-    containment : '#body',
+    containment : 'body',
     revert : 'invalid' // revert when dropped at a wrong location
   });
   $card.click(function() {
@@ -85,12 +85,27 @@ $(function() {
   });
   $('#deck').append($fdCard1, $fdCard2);
 
-  // wire the drop logic for the discard
-  $('#discard').droppable({
+  // wire the hand logic
+  $('#hand').droppable({
     drop : function(event, ui) {
       $(this).effect('highlight');
     }
   });
 
+  // wire the drop logic for the discard
+  $('#discard').droppable({
+    drop : function(event, ui) {
+      $(this).effect('highlight');
+      $(this).append(ui.draggable);
+      ui.draggable.css({
+        top : '10px',
+        left : '10px',
+        position : 'absolute'
+      });
+      ui.draggable.draggable({ // undraggable
+        disabled : true
+      });
+    }
+  });
 
 })

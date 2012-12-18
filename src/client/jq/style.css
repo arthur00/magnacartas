@@ -54,8 +54,7 @@ body {
 	background-color: dimgray;
 	border: 3px solid black;
 	border-radius: 5px;
-	position: relative;
-	float: left;
+	float:left;
 }
 
 .card>img {
