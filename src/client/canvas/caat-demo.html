@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<link href="demo.css" rel="stylesheet" type="text/css"/>
+    <title></title>
+</head>
+<body>
+    <script type="text/javascript" src="../lib/caat.js"></script>
+    <script type="text/javascript">
+        function loadImages() {
+                var director = new CAAT.Foundation.Director().initialize(1280,1024).setClear(false);
+                
+                new CAAT.Module.Preloader.ImagePreloader().loadImages(
+                        [
+                        {id:'ruffy',     url:'images/ruffy.jpg'},
+                        {id:'bg',        url:'images/background.jpg'}
+                        ],
+                        function( counter, images ) {
+                                if (counter == images.length) {
+                                director.setImagesCache(images);
+                                startCardGame(director);
+                                }
+                        }
+                );
+                CAAT.loop(60);
+        }
+
+        function startCardGame(director) {
+                console.log('starting director');
+                var w = 1280
+                var h = 1024
+                var scene = director.createScene();
+                // Create the main container for events
+                var cc= new CAAT.ActorContainer().
+                setBounds( 0,0,director.width,director.height );
+                cc.setGestureEnabled(true);
+                scene.addChild(cc);
+                
+
+                // Generate cards
+                numCards = 20
+                startPoint = w/2 - (numCards/2 * 20)
+                cardw = 100
+                cardh = 160
+                
+                // First player
+                for (var i = 0; i < numCards; i++) {
+                        var bg = new CAAT.SpriteImage().initialize(
+                                        director.getImage('bg'),1,1);
+                
+                        var p = new CAAT.ActorContainer().
+                        setFillStyle('#ffffff').
+                        setBounds(startPoint + i*30,40,cardw,cardh).
+                        setBackgroundImage(bg,false).
+                        setImageTransformation(CAAT.Foundation.SpriteImage.TR_FIXED_TO_SIZE);
+                        p.setGestureEnabled(true);
+
+                        p.mouseEnter = function(ev) {
+                                this.pointed = true;
+                        }
+
+                        p.mouseExit = function(ev) {
+                                this.pointed = false;
+                        }
+
+                        p.paint= function(director, time) {
+
+                                var canvas= director.ctx;
+
+                                if ( null!=this.parent && null!=this.fillStyle ) {
+                                canvas.fillStyle= this.pointed ? 'orange' : (this.fillStyle!=null ? this.fillStyle : 'white'); //'white';
+                                canvas.fillRect(0,0,this.width,this.height );
+                                }
+
+                                canvas.strokeStyle= this.pointed ? 'red' : 'black';
+                                canvas.strokeRect(0,0,this.width,this.height );
+
+                        };
+                        cc.addChild(p);
+                        
+                        var portrait = new CAAT.SpriteImage().initialize(
+                                director.getImage('ruffy'),1,1);
+                                       
+                
+                        var p0 = new CAAT.Actor().
+                        setBackgroundImage(portrait,false).
+                        setBounds( cardw*0.1, cardh*0.1, cardw*0.8, cardh*0.5 ).
+                        setImageTransformation(CAAT.Foundation.SpriteImage.TR_FIXED_TO_SIZE);
+                        p.addChild(p0);
+
+                        var p1= new CAAT.TextActor().
+                                setFont("8px Lucida sans").
+                                setText("Gomu-gomu no Pistol!").
+                                setTextFillStyle('red').
+                                setTextAlign("left").
+                                calcTextSize(director).
+                                setTextBaseline("bottom").
+                                cacheAsBitmap();
+                        p.addChild(p1.setLocation(cardw*0.1,cardh*0.7));
+                }
+                
+        }
+        loadImages();
+    </script>
+</body>
+</html>
