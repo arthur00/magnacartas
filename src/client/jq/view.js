@@ -92,13 +92,5 @@ $(function() {
     }
   });
 
-  // add face-down cards on the discard pile
-  var $fdCard3 = $('<div>').attr({
-    'class' : 'stacktop'
-  }).css({
-    top : '30px',
-    left : '30px'
-  });
-  $('#discard').append($fdCard3);
 
 })
