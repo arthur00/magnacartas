@@ -1,0 +1,75 @@
+body {
+	padding: 0;
+	margin: 0;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.cardStack {
+	width: 200px;
+	height: 300px;
+	padding: 20px;
+	border: 3px solid dimgray;
+	border-radius: 10px;
+	float: left;
+}
+
+#deck {
+	background-color: lightblue;
+	position: absolute;
+	left: 50px;
+	bottom: 50px;
+}
+
+#discard {
+	background-color: floralwhite;
+   position: absolute;
+   right: 50px;
+   bottom: 50px;
+}
+
+.card {
+	width: 180px;
+	height: 280px;
+	background-color: dimgray;
+	border: 3px solid black;
+	border-radius: 10px;
+	position: relative;
+	float: left;
+}
+
+.card>img {
+	width: 120px;
+	margin: 0px;
+	position: absolute;
+	top: 35px;
+	left: 28px;
+	border: 2px solid black;
+}
+
+.card>h3 {
+	font-size: 16px;
+	text-align: center;
+	color: silver;
+	text-align: center;
+	color: silver;
+	margin: 8px;
+}
+
+.card>.cost {
+	font-size: 20px;
+	font-weight: bold;
+	color: gold;
+	position: absolute;
+	top: 6px;
+	right: 8px;
+	color: gold;
+}
+
+.card>.effect {
+	font-size: 16px;
+	position: absolute;
+	bottom: 15px;
+	left: 30px;
+}
