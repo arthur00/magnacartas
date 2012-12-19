@@ -24,42 +24,88 @@ var cardData = {
   }
 }
 
-// on load
-$(function() {
+// hack to keep cards on top of each others when clicked or dragged
+var curZ = 1;
 
-  // create a bunch of cards
-  for (cid in cardData) {
-    var c = cardData[cid]
+// gain a card in hand given the card id
+var gainCard = function(cid) {
 
-    var $img = $('<img/>').attr({
-      id : cid,
-      src : 'img/' + c.img
-    })
+  var c = cardData[cid]
+  var $img = $('<img/>').attr({
+    src : 'img/' + c.img
+  });
+  var $title = $('<span/>').text(c.name).attr({
+    'class' : 'name'
+  });
+  var $cost = $('<span/>').text(c.cost).attr({
+    'class' : 'cost'
+  });
+  var $effects = $('<span/>').html(c.effect).attr({
+    'class' : 'effect'
+  });
 
-    var $title = $('<h3/>').text(c.name)
-
-    var $cost = $('<span/>').text(c.cost).attr({
-      'class' : 'cost'
-    })
-
-    var $effects = $('<span/>').html(c.effect).attr({
-      'class' : 'effect'
-    })
-
-    var $card = $('<div/>').attr({
-      'class' : 'card'
-    }).append($title, $cost, $img, $effects)
-
-    $('body').append($card)
-  }
-
-  // hack to keep cards on top of each others when dragged
-  var curZ = 1;
-  $('.card').draggable({
+  var $card = $('<div/>').attr({
+    'class' : 'card',
+  }).append($title, $cost, $img, $effects);
+  // keep cards on top of each others when clicked or dragged
+  $card.draggable({
     start : function() {
       $(this).css("z-index", curZ++)
     },
-    containment : 'body'
-  })
+    containment : 'body',
+    revert : 'invalid' // revert when dropped at a wrong location
+  });
+  $card.click(function() {
+    $(this).css('z-index', curZ++)
+  });
+
+  $('#hand').append($card);
+}
+
+// on load
+$(function() {
+
+  // wire the logic in deck drawing
+  $('#deck').click(function() {
+    gainCard('blackBeard');
+  });
+
+  // add face-down cards on the deck pile
+  var $fdCard1 = $('<div>').attr({
+    'class' : 'stacktop'
+  }).css({
+    top : '20px',
+    left : '20px'
+  });
+  var $fdCard2 = $('<div>').attr({
+    'class' : 'stacktop'
+  }).css({
+    top : '30px',
+    left : '30px'
+  });
+  $('#deck').append($fdCard1, $fdCard2);
+
+  // wire the hand logic
+  $('#hand').droppable({
+    drop : function(event, ui) {
+      $(this).effect('highlight');
+    }
+  });
+
+  // wire the drop logic for the discard
+  $('#discard').droppable({
+    drop : function(event, ui) {
+      $(this).effect('highlight');
+      $(this).append(ui.draggable);
+      ui.draggable.css({
+        top : '10px',
+        left : '10px',
+        position : 'absolute'
+      });
+      ui.draggable.draggable({ // undraggable
+        disabled : true
+      });
+    }
+  });
 
 })

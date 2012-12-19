@@ -7,12 +7,19 @@ body {
 }
 
 .cardStack {
-	width: 200px;
-	height: 300px;
-	padding: 20px;
+	width: 240px;
+	height: 340px;
 	border: 3px solid dimgray;
 	border-radius: 10px;
-	float: left;
+}
+
+.stacktop {
+	position: absolute;
+	width: 180px;
+	height: 280px;
+	background-color: dimgray;
+	border: 3px solid black;
+	border-radius: 5px;
 }
 
 #deck {
@@ -24,9 +31,21 @@ body {
 
 #discard {
 	background-color: floralwhite;
-   position: absolute;
-   right: 50px;
-   bottom: 50px;
+	position: absolute;
+	right: 50px;
+	bottom: 50px;
+}
+
+#hand {
+	width: 600px;
+	height: 286px; /* card height + card border*/
+	background-color: lightgreen;
+	position: absolute;
+	bottom: 50px;
+	right: 300px;
+	padding: 0px;
+	border: 3px solid dimgray;
+	border-radius: 10px;
 }
 
 .card {
@@ -34,9 +53,8 @@ body {
 	height: 280px;
 	background-color: dimgray;
 	border: 3px solid black;
-	border-radius: 10px;
-	position: relative;
-	float: left;
+	border-radius: 5px;
+	float:left;
 }
 
 .card>img {
@@ -48,13 +66,14 @@ body {
 	border: 2px solid black;
 }
 
-.card>h3 {
+.card>.name {
+	font-weight: bold;
 	font-size: 16px;
-	text-align: center;
-	color: silver;
+	display: block;
 	text-align: center;
 	color: silver;
 	margin: 8px;
+	text-align: center;
 }
 
 .card>.cost {
@@ -64,7 +83,6 @@ body {
 	position: absolute;
 	top: 6px;
 	right: 8px;
-	color: gold;
 }
 
 .card>.effect {
