@@ -10,23 +10,17 @@ function GameModel(playerId) {
     GAMECOMM.sendJoinGame(this.playerId)
   }
 
-  /*
-   * player is a dict
-   */
+  // player is a dict
   this.addPlayer = function(player) {
     console.log(player)
   }
 
-  /*
-   * player is a dict
-   */
+  // player is a dict
   this.removePlayer = function(player) {
     console.log(player)
   }
 
-  /*
-   * players is a list of player
-   */
+  // players is a list of player
   this.welcome = function(players) {
     console.log(players)
   }
