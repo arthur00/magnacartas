@@ -1,4 +1,3 @@
-from serverbasic.gateway import gateway
 from tornado.websocket import WebSocketHandler
 import json
 import tornado.ioloop
@@ -6,6 +5,11 @@ import tornado.web
 from logger import logger
 
 
+gateway = None
+def set_gateway(gw):
+    global gateway
+    gateway = gw
+    
 class ClientHandler(WebSocketHandler):
     """ Websocket handler. Sends and receives messages from/to clients. """
 
@@ -31,7 +35,7 @@ class ClientHandler(WebSocketHandler):
         logger.debug('received ' + str(m))
         if 'join' in m:
             pname = m['join']['name']
-            player = gateway().add_player(pname, self)
+            player = gateway.add_player(pname, self)
             self._player = player
 
 

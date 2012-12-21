@@ -1,6 +1,5 @@
-from gateway import set_gateway
 from logger import logger
-from tornadocomm import start_server
+from tornadocomm import set_gateway, start_server
 
 
 
