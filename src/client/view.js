@@ -70,6 +70,7 @@ $(function() {
     gainCard('blackBeard');
   });
 
+/*
   // add face-down cards on the deck pile
   var $fdCard1 = $('<div>').attr({
     'class' : 'stacktop'
@@ -84,7 +85,7 @@ $(function() {
     left : '30px'
   });
   $('#deck').append($fdCard1, $fdCard2);
-
+*/
   // wire the hand logic
   $('#hand').droppable({
     drop : function(event, ui) {
@@ -100,7 +101,7 @@ $(function() {
       ui.draggable.css({
         top : '10px',
         left : '10px',
-        position : 'absolute'
+        position : 'relative'
       });
       ui.draggable.draggable({ // undraggable
         disabled : true
