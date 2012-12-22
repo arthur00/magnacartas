@@ -13,13 +13,15 @@ var isEven = function(someNumber){
 
 function View() {
   this.addCardToTableau = function(card) {
-   $('#playerTableau').append(card);  
+    card.css({left: 0, top: 0});
+    $('#playerTableau').append(card);
   }  
     
   this.addCardToHand = function(card) {
+    /*
     card.css({'position':'absolute'});
     card.css({'top':"50%"});
-    card.css({'left':"50%"});
+    card.css({'left':"50%"});*/
     $('#playerHand').append(card);
     
     cards = $('#playerHand').children();
@@ -121,7 +123,7 @@ $(function() {
   $('#playerTableau').droppable({
     tolerance : "pointer",
     drop : function(event, ui) {
-      model.dropPlayerTableau();
+      model.dropPlayerTableau(ui.draggable);
       $(this).effect('highlight');
     }
   });
@@ -129,7 +131,7 @@ $(function() {
   $('#playerHand').droppable({
     tolerance : "pointer",
     drop : function(event, ui) {
-      model.dropPlayerHand(ui.droppable);
+      model.dropPlayerHand(ui.draggable);
     }
   });
   
