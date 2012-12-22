@@ -32,10 +32,13 @@ class ClientHandler(WebSocketHandler):
             self._player.disconnect()
 
     def send(self, msg):
+        """ Send in JSON format """
         self.write_message(json.dumps(msg))
         #logger.debug('sent ' + str(msg))
 
     def on_message(self, msg):
+        """ Except for join, 
+        other client commands are directly sent to the model. """
         m = json.loads(msg)
         #logger.debug('received ' + str(m))
         if 'join' in m:
@@ -47,7 +50,7 @@ class ClientHandler(WebSocketHandler):
             # then call game.on_draw({'qty':3})
             for cmd, args in m.items():
                 getattr(gateway, 'on_' + cmd)(args)
-                
+
 
 def start_server(port, url):
     app = tornado.web.Application([(url, ClientHandler)])

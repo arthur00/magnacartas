@@ -28,12 +28,12 @@ class Player():
         self._handler = None
 
 
-    def kickout(self):
+    def kickout(self, new_handler):
         """ Kick a player out of the game. Notify that player."""
         msg = {'kick': {}}
         self.send(msg)
         self._handler.close()
-        self._handler = None
+        self._handler = new_handler
 
 
     def send(self, msg):
