@@ -1,6 +1,52 @@
 /*
  * A one-shot prototype to test a card game UI without using canvas. 
  */
+view = new View();
+model = new Model(view);
+
+minStepAngle = 30;
+radius = 0;
+    
+var isEven = function(someNumber){
+    return (someNumber%2 == 0) ? true : false;
+};
+
+function View() {
+  this.addCardToTableau = function(card) {
+   $('#playerTableau').append(card);  
+  }  
+    
+  this.addCardToHand = function(card) {
+    card.css({'position':'absolute'});
+    card.css({'top':"50%"});
+    card.css({'left':"50%"});
+    $('#playerHand').append(card);
+    
+    cards = $('#playerHand').children();
+
+    numCards = cards.length;
+    
+    stepAngle = ((180/numCards > minStepAngle) ? minStepAngle : 180/numCards)/2;
+    startIndex = 0;
+    
+    if (!isEven(numCards)) {
+      $(cards[Math.floor(numCards/2)]).transition({ rotate: 0}).transition({ x: 0, y: -radius} );
+    }
+    
+    angle = stepAngle;  
+    if (numCards > 1) {
+      for ( i = 0; i < numCards/2; i++ ) {
+        radians = angle * (Math.PI/180);
+        
+        $(cards[Math.floor(numCards/2) -i - 1]).transition({ rotate: -angle  }).transition({ x: 0, y: -radius});        
+        $(cards[Math.ceil(numCards/2) + i]).transition({ rotate: angle  }).transition({ x: 0, y: -radius});
+        angle=angle*2; 
+      }
+    }
+    
+  }
+}
+
 
 // model data
 var cardData = {
@@ -52,49 +98,43 @@ var gainCard = function(cid) {
     start : function() {
       $(this).css("z-index", curZ++)
     },
-    containment : 'body',
+    containment : '#gameBoard',
     revert : 'invalid' // revert when dropped at a wrong location
   });
   $card.click(function() {
     $(this).css('z-index', curZ++)
   });
 
-  $('#hand').append($card);
+  view.addCardToHand($card);
+
 }
 
 // on load
 $(function() {
-
+  //$('#playerDeck').transition({rotate:30});
   // wire the logic in deck drawing
-  $('#deck').click(function() {
+  $('#playerDeck').click(function() {
     gainCard('blackBeard');
   });
-
-/*
-  // add face-down cards on the deck pile
-  var $fdCard1 = $('<div>').attr({
-    'class' : 'stacktop'
-  }).css({
-    top : '20px',
-    left : '20px'
-  });
-  var $fdCard2 = $('<div>').attr({
-    'class' : 'stacktop'
-  }).css({
-    top : '30px',
-    left : '30px'
-  });
-  $('#deck').append($fdCard1, $fdCard2);
-*/
+  
   // wire the hand logic
-  $('#hand').droppable({
+  $('#playerTableau').droppable({
+    tolerance : "pointer",
     drop : function(event, ui) {
+      model.dropPlayerTableau();
       $(this).effect('highlight');
     }
   });
-
+  
+  $('#playerHand').droppable({
+    tolerance : "pointer",
+    drop : function(event, ui) {
+      model.dropPlayerHand(ui.droppable);
+    }
+  });
+  
   // wire the drop logic for the discard
-  $('#discard').droppable({
+  $('#playerDiscard').droppable({
     drop : function(event, ui) {
       $(this).effect('highlight');
       $(this).append(ui.draggable);
@@ -108,5 +148,4 @@ $(function() {
       });
     }
   });
-
 })
