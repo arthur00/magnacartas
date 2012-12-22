@@ -1,19 +1,27 @@
 from logger import logger
 
 
+
 class Player():
     """ Basic player model. Created when a player logs in.
     Provides methods for "I disconnected" and "another player joined/left".
     """
 
-    def __init__(self, game, name, conn_handler):
+    def __init__(self, game, name, conn_handler, pos):
         self._game = game
-        self.name = name
         self._handler = conn_handler
+        self.name = name
+        self.pos = pos # position in the table
+        self.score = 0
+
+    def __repr__(self):
+        return '<Player self.name>'
+    def __str__(self):
+        return self.__repr__()
 
 
     def serialize(self):
-        return {'name':self.name}
+        return {'name':self.name, 'pos': self.pos}
 
 
     @property
@@ -23,17 +31,9 @@ class Player():
 
     def disconnect(self):
         """ The player's endpoint disconnected. """
+        self._game.remove_player(self)
         logger.info('player left: %s' % self.name)
-        self._game.remove_player(self.name)
         self._handler = None
-
-
-    def kickout(self, new_handler):
-        """ Kick a player out of the game. Notify that player."""
-        msg = {'kick': {}}
-        self.send(msg)
-        self._handler.close()
-        self._handler = new_handler
 
 
     def send(self, msg):
@@ -53,9 +53,27 @@ class Player():
         self.send(msg)
 
 
-    def welcome(self, players):
-        splayers = [player.serialize() for player in players]
-        msg = {'welcome': {'players':splayers}}
+    def welcome(self, table):
+        msg = {'welcome': {'table':[p.serialize() for p in table]}}
         self.send(msg)
+
+    def game_start(self, table, first_player):
+        data = {'table':[p.serialize() for p in table]}
+        data['firstPlayer'] = first_player.serialize()
+        data['myPos'] = self.pos
+        msg = {'gameStart': data}
+        self.send(msg)
+
+    def game_over(self, table, iswinner):
+        scores = []
+        for player in table:
+            pdata = {'player':player.serialize()}
+            pdata['score'] = player.score
+            scores.append(pdata)
+        msg = {'gameOver': {'scores':scores, 'winner':iswinner}}
+        self.send(msg)
+
+
+
 
 
