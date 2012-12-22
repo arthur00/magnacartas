@@ -1,21 +1,25 @@
 <html>
 <head>
 <title>Cards without canvas</title>
+<link rel="stylesheet" href="style.css">
 <script
   src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script
   src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
 <script src="lib/jquery.crSpline.js"></script>
+<script src="lib/jquery.transit.js"></script>
+<script src="model.js"></script>
 <script src="view.js"></script>
-<link rel="stylesheet" href="style.css">
+
 </head>
 <body>
-  <div class='gameBoard' id='board'>
-    <div class='cardStack' id='deck'></div>
-    <div id='hand'></div>
-    <div class='cardStack' id='discard'></div>
-  </div>
 
+  <div id='gameBoard'>
+    <div class='faceDown card' id='playerDeck'></div>
+    <div class='tableau' id='playerTableau'></div>
+    <div class='hand' id='playerHand'> </div>
+    <div class='faceUp card' id='playerDiscard'></div>
+  </div>
 
 </body>
 </html>
