@@ -18,25 +18,29 @@ function GameCommWebSocket() {
     GAMEMODEL.onConnectToGameServer();
   };
 
-  // TODO: try to get back the connection every 5-10 seconds a la gmail
+  // socket closed: dont do anything
   socket.onclose = function() {
     console.log('socket closed')
   };
+
+  // model callbacks triggered when the socket receives a message
+  rcv_callbacks = {
+    'welcome' : GAMEMODEL.welcome,
+    'playerJoined' : GAMEMODEL.addPlayer,
+    'playerLeft' : GAMEMODEL.removePlayer,
+    'kick': GAMEMODEL.kick
+  }
 
   // receive handler
   socket.onmessage = function(msg) {
     m = JSON.parse(msg.data);
     console.log(m)
-    
-    if ('welcome' in m) {
-      config = m['welcome']
-      GAMEMODEL.welcome(config.players)
-    } else if ('playerJoined' in m) { // another player joined
-      player = m['playerJoined']
-      GAMEMODEL.addPlayer(player)
-    } else if ('playerLeft' in m) { // another player left
-      player = m['playerLeft']
-      GAMEMODEL.removePlayer(player)
+    for ( var cmd in m) {
+      try {
+        rcv_callbacks[cmd](m[cmd])
+      } catch (TypeError) { // callback not found
+        console.log('Callback not found for command: ' + cmd)
+      }
     }
   };
 

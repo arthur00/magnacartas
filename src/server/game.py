@@ -20,11 +20,12 @@ class PirateGame():
         start_server(port, url)
 
 
-    def add_player(self, pname, handler):
+    def add_player(self, args, handler):
         """ Add a player. If he was connected already, close the old connection.
         Notify all other currently connected clients.
         Return the new instance of the player.
         """
+        pname = args['name']
         # kick the player with that name out if he's already connected
         if pname in self.players.keys():
             logger.error('player was already connected: %s' % str(pname))

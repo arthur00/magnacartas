@@ -29,7 +29,9 @@ class Player():
 
 
     def kickout(self):
-        """ Kick a player out of the game. """
+        """ Kick a player out of the game. Notify that player."""
+        msg = {'kick': {}}
+        self.send(msg)
         self._handler.close()
         self._handler = None
 
