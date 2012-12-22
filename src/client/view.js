@@ -5,7 +5,7 @@ view = new View();
 model = new Model(view);
 
 minStepAngle = 30;
-radius = 0;
+radius = 100;
     
 var isEven = function(someNumber){
     return (someNumber%2 == 0) ? true : false;
@@ -18,10 +18,9 @@ function View() {
   }  
     
   this.addCardToHand = function(card) {
-    /*
+    card.css({'top':0});
+    card.css({'left':50});
     card.css({'position':'absolute'});
-    card.css({'top':"50%"});
-    card.css({'left':"50%"});*/
     $('#playerHand').append(card);
     
     cards = $('#playerHand').children();
@@ -141,9 +140,9 @@ $(function() {
       $(this).effect('highlight');
       $(this).append(ui.draggable);
       ui.draggable.css({
-        top : '10px',
-        left : '10px',
-        position : 'relative'
+        position: 'absolute',
+        top : '0',
+        left : '0'
       });
       ui.draggable.draggable({ // undraggable
         disabled : true
