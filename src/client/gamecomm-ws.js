@@ -28,13 +28,14 @@ function GameCommWebSocket() {
     'welcome' : GAMEMODEL.welcome,
     'playerJoined' : GAMEMODEL.addPlayer,
     'playerLeft' : GAMEMODEL.removePlayer,
-    'kick': GAMEMODEL.kick
+    'gameStart' : GAMEMODEL.gameStart,
+    'gameOver': GAMEMODEL.gameOver
   }
 
   // receive handler
   socket.onmessage = function(msg) {
     m = JSON.parse(msg.data);
-    console.log(m)
+    // console.log(m)
     for ( var cmd in m) {
       try {
         rcv_callbacks[cmd](m[cmd])
@@ -55,6 +56,7 @@ function GameCommWebSocket() {
   this.send = function(msgType, content) {
     var msg = {};
     msg[msgType] = content;
+    // console.log(msg)
     socket.send(JSON.stringify(msg));
   }
 

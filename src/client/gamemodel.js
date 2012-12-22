@@ -27,9 +27,13 @@ function GameModel(playerId) {
   this.welcome = function(args) {
     console.log(args)
   }
-  
-  this.kick = function(args) {
-    console.log('Somebody else connected with the same player name.')
+
+  this.gameStart = function(args) {
+    console.log(args)
+  }
+
+  this.gameOver = function(args) {
+    console.log(args)
   }
 
 }

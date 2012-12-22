@@ -49,7 +49,10 @@ class ClientHandler(WebSocketHandler):
             # if m is {'draw': {'qty':3}}
             # then call game.on_draw({'qty':3})
             for cmd, args in m.items():
-                getattr(gateway, 'on_' + cmd)(args)
+                try:
+                    getattr(gateway, 'on_' + cmd)(args)
+                except AttributeError:
+                    logger.error('No such callback: ' + 'on_' + cmd)
 
 
 def start_server(port, url):
