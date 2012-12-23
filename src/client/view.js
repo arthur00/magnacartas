@@ -4,7 +4,9 @@
 view = new View();
 model = new Model(view);
 
-minStepAngle = 30;
+minStepAngle = 10;
+minorRadius = 100;
+majorRadius = 600;
 radius = 100;
     
 var isEven = function(someNumber){
@@ -12,39 +14,65 @@ var isEven = function(someNumber){
 };
 
 function View() {
-  this.addCardToTableau = function(card) {
-    card.css({left: 0, top: 0});
-    $('#playerTableau').append(card);
-  }  
-    
-  this.addCardToHand = function(card) {
-    card.css({'top':0});
-    card.css({'left':50});
-    card.css({'position':'absolute'});
-    $('#playerHand').append(card);
-    
-    cards = $('#playerHand').children();
+  this.revertAnimationDuration = 500;
 
+  this.addCardToTableau = function(card) {
+    card.css({left: 0, top: 0, rotate: 0, position:'relative', x:0, y:0});
+    card.draggable( "disable" );
+    $('#actionTableau').append(card);
+  }
+  
+  this.reArrangeHand = function(cards) {
+    // this.rotateHand(cards);
+    this.spreadHand(cards);
+  }
+  
+  this.rotateHand = function(cards) {
+    
     numCards = cards.length;
     
-    stepAngle = ((180/numCards > minStepAngle) ? minStepAngle : 180/numCards)/2;
+    //stepAngle = ((180/numCards > minStepAngle) ? minStepAngle : 180/numCards)/2;
+    stepAngle = 15;
     startIndex = 0;
     
     if (!isEven(numCards)) {
-      $(cards[Math.floor(numCards/2)]).transition({ rotate: 0}).transition({ x: 0, y: -radius} );
+      $(cards[Math.floor(numCards/2)]).transition({ rotate: 0}, 10).transition({ x: 0, y: -radius}, 50 );
+      $(cards[Math.floor(numCards/2)]).css({'left':150, 'position':'absolute'});
     }
     
     angle = stepAngle;  
     if (numCards > 1) {
       for ( i = 0; i < numCards/2; i++ ) {
+
         radians = angle * (Math.PI/180);
         
-        $(cards[Math.floor(numCards/2) -i - 1]).transition({ rotate: -angle  }).transition({ x: 0, y: -radius});        
-        $(cards[Math.ceil(numCards/2) + i]).transition({ rotate: angle  }).transition({ x: 0, y: -radius});
-        angle=angle*2; 
+        //radius = minorRadius/majorRadius * Math.sqrt(Math.pow(majorRadius,2) - Math.tan(radians) * minorRadius);
+        
+        $(cards[Math.floor(numCards/2) -i - 1]).transition({ rotate: -angle }, 10).transition({ x: 0, y: -radius}, 50);        
+        $(cards[Math.ceil(numCards/2) + i]).transition({ rotate: angle  }, 10).transition({ x: 0, y: -radius}, 50);
+        $(cards[Math.floor(numCards/2) -i - 1]).css({'left':150, 'position':'absolute'});
+        $(cards[Math.ceil(numCards/2) + i]).css({'left':150, 'position':'absolute'});        
+
+        angle+=stepAngle; 
       }
-    }
+    }    
+  }
+  
+  this.spreadHand = function(cards) {
+    curLeft = 0;
+    startZ = 1000;
     
+    for ( i = 0; i < cards.length; i++ ) {
+      $(cards[i]).css({left:curLeft, top:0, position:'absolute', 'z-index':startZ++});
+      curLeft+=30;
+    }
+  }
+    
+  this.addCardToHand = function(card) {
+    $('#playerHand').append(card);
+    
+    cards = $('#playerHand').children();
+    this.reArrangeHand(cards);
   }
 }
 
@@ -97,13 +125,23 @@ var gainCard = function(cid) {
   // keep cards on top of each others when clicked or dragged
   $card.draggable({
     start : function() {
-      $(this).css("z-index", curZ++)
+      $(this).css({rotate:'', x:'', y:'', transform:''});
     },
+    revert : function(socketObj) {
+      if(socketObj === false)
+      {
+        setTimeout(function() {view.spreadHand($('#playerHand').children())}, view.revertAnimationDuration);
+        return true;
+      }
+    },
+    revertDuration: view.revertAnimationDuration,
     containment : '#gameBoard',
-    revert : 'invalid' // revert when dropped at a wrong location
+    stack: '.card',
+    opacity: 0.35,
+    //revert : 'invalid' // revert when dropped at a wrong location
   });
   $card.click(function() {
-    $(this).css('z-index', curZ++)
+
   });
 
   view.addCardToHand($card);
@@ -112,17 +150,25 @@ var gainCard = function(cid) {
 
 // on load
 $(function() {
-  //$('#playerDeck').transition({rotate:30});
+  $.fn.disableSelection = function() {
+        return this
+                 .attr('unselectable', 'on')
+                 .css('user-select', 'none')
+                 .on('selectstart', false);
+    };
+  $('gameBoard').click(function() {
+  });
+
   // wire the logic in deck drawing
   $('#playerDeck').click(function() {
     gainCard('blackBeard');
   });
   
   // wire the hand logic
-  $('#playerTableau').droppable({
+  $('#actionTableau').droppable({
     tolerance : "pointer",
     drop : function(event, ui) {
-      model.dropPlayerTableau(ui.draggable);
+      model.dropActionTableau(ui.draggable);
       $(this).effect('highlight');
     }
   });

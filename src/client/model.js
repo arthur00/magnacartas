@@ -28,7 +28,7 @@ function Model(view) {
     addCardToHand(card);
   }
   
-  this.dropPlayerTableau = function(card) {
+  this.dropActionTableau = function(card) {
     addCardToTableau(card);
   }
   
