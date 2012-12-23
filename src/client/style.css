@@ -155,11 +155,24 @@ body {
     position: absolute;
   }
 
+  .opponentOK {
+    position: absolute;
+    height: 30px;
+    width: 30px;
+    bottom: 20px;
+    right: 20px;
+    
+    background-repeat:no-repeat;
+    background-image:url('img/arrow_button_right.png');
+    background-size: cover;
+  }
+
   #leftOpponent {
     top: 0px;
     left: 0px;
     height:480px;
     width:100px;
+    z-index: 1;
   }
 
   #rightOpponent {
@@ -167,21 +180,19 @@ body {
     right: 0px;
     height:480px;
     width:100px;  
+    z-index: 1;
   }
 
   #acrossOpponent {
     top: 0px;
     left: 272px; /* (1024 - 480)/2 */
     height:100px;
-    width:480px;  
+    width:480px;
+    z-index: 1;  
   }
   
   
 /********************/
-/* Side scrolling menu */
+/* Sliding menu */
 
-#customScrollBox {
-  height:inherit;
-  width:inherit;
-}
 

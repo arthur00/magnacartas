@@ -47,32 +47,53 @@ function View() {
   /****************************************************************/
   
   this.init = function() {
-      $('#leftOpponent').hover(
-		  function(){ //mouse over
-        view.SlidePanels($(this),"close", "left");		
-		  },
-		  function(){ //mouse out
-        view.SlidePanels($(this),"open", "left");
-		  }
-	  );
+      $('#leftOppOK').hide();
+      $('#leftOppOK').css({rotate:180});
+      $('#rightOppOK').hide();
+      $('#acrossOppOK').hide();
+      $('#acrossOppOK').css({rotate:-   90});
+      
+      $('#leftOpponent').click(
+		  function() { //mouse over
+              view.SlidePanels($(this),"open", "left");
+              $('#leftOppOK').show();
+	   });
+		  
+      $('#leftOppOK').click(
+		  function(e) { //mouse out
+		      e.stopPropagation();
+		      $('#leftOppOK').hide();
+              view.SlidePanels($('#leftOpponent'),"close", "left");
+	   });
+	   
 
-      $('#rightOpponent').hover(
-		  function(){ //mouse over
-        view.SlidePanels($(this),"close", "right");		
-		  },
-		  function(){ //mouse out
-        view.SlidePanels($(this),"open", "right");
-		  }
-	  );
-
-    $('#acrossOpponent').hover(
-		  function(){ //mouse over
-        view.SlidePanels($(this),"close", "top");		
-		  },
-		  function(){ //mouse out
-        view.SlidePanels($(this),"open", "top");
-		  }
-	  );
+      $('#rightOpponent').click(
+		  function() { //mouse over
+    		  $('#rightOppOK').show();
+              view.SlidePanels($(this),"open", "right");
+	   });
+	  
+		  
+      $('#rightOppOK').click(
+		  function(e) { //mouse out
+		      $('#rightOppOK').hide();
+		      e.stopPropagation();
+              view.SlidePanels($('#rightOpponent'),"close", "right");
+	   });
+	   
+	   $('#acrossOpponent').click(
+		  function() { //mouse over
+		      $('#acrossOppOK').show();
+              view.SlidePanels($(this),"open", "top");
+	   });
+	  
+		  
+      $('#acrossOppOK').click(
+		  function(e) { //mouse out
+		      $('#acrossOppOK').hide();
+		      e.stopPropagation();
+              view.SlidePanels($('#acrossOpponent'),"close", "top");
+	   });
 
 
     // wire the logic in deck drawing
@@ -111,11 +132,41 @@ function View() {
         });
       }
     });
+    
+    $('#playerDiscard').click(
+        function() {
+            view.newCardOpponent($('#leftOpponent'),"left");
+            view.newCardOpponent($('#rightOpponent'),"right");
+            view.newCardOpponent($('#acrossOpponent'),"top");
+    });
   } // End init
   
   /****************************************************************/
   /* Card management */
   /****************************************************************/
+  
+  this.newCardOpponent = function(opponentHand, pos) {
+    var $card = $('<div/>').attr({'class': 'faceDown card'});
+    opponentHand.append($card);
+    
+    curTop = 0;
+    curLeft = 0;
+    cards = opponentHand.children();
+    startZ = 500;
+    
+    if (pos == "left" || pos == "right") {
+        for ( i = 0; i < cards.length; i++ ) {
+          $(cards[i]).css({top:curTop-30, position:'absolute', 'z-index':startZ++});
+          curTop+=30;
+        }
+    }
+    else {
+        for ( i = 0; i < cards.length; i++ ) {
+          $(cards[i]).css({rotate:90, left:curLeft, top:-30, position:'absolute', 'z-index':startZ++});
+          curLeft+=30;
+        }
+    }
+  }
   
   // gain a card in hand given the card id
   this.newCard = function(cid) {
@@ -178,23 +229,22 @@ function View() {
 		  stopAnim = {height: 710};
 		}
 		else {
-  		return false;
+  		    return false;
 		}
 		
 		var width = $outer_container.width();
 		var easing="easeInOutExpo";
-		if(action=="open"){
+		if(action=="close"){
 			$outer_container.stop().animate(
 			openAnim, 
 			speed,easing, 
 			function() {
-			  $outer_container.css({'background-color':''});
+			  $outer_container.css({'background-color':'', 'z-index':1});
 			});
-
-			
-		} else {
+		} 
+		else {
 			$outer_container.stop().animate(stopAnim, speed, easing);		
-      $outer_container.css({'background-color':'green'});
+            $outer_container.css({'background-color':'green', 'z-index':2});
 		}
 	}
 
