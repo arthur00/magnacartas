@@ -8,12 +8,200 @@ minStepAngle = 10;
 minorRadius = 100;
 majorRadius = 600;
 radius = 100;
+
+  // model data
+  var cardData = {
+    'anneBonny' : {
+      'name' : 'Anne Bonny',
+      'cost' : 5,
+      'img' : 'anne_bonny.jpg',
+      'effect' : '+3 cards'
+    },
+    'blackBart' : {
+      'name' : 'Black Bart',
+      'cost' : 4,
+      'img' : 'black_bart.jpg',
+      'effect' : '+1 card<br/>+1 buy'
+    },
+    'blackBeard' : {
+      'name' : 'Black Beard',
+      'cost' : 3,
+      'img' : 'black_beard.jpg',
+      'effect' : '+1 coin'
+    }
+  }
+
+  // hack to keep cards on top of each others when clicked or dragged
+  var curZ = 1;
+
+
     
 var isEven = function(someNumber){
     return (someNumber%2 == 0) ? true : false;
 };
 
+
 function View() {
+  /****************************************************************/
+  /* View Init */
+  /****************************************************************/
+  
+  this.init = function() {
+      $('#leftOpponent').hover(
+		  function(){ //mouse over
+        view.SlidePanels($(this),"close", "left");		
+		  },
+		  function(){ //mouse out
+        view.SlidePanels($(this),"open", "left");
+		  }
+	  );
+
+      $('#rightOpponent').hover(
+		  function(){ //mouse over
+        view.SlidePanels($(this),"close", "right");		
+		  },
+		  function(){ //mouse out
+        view.SlidePanels($(this),"open", "right");
+		  }
+	  );
+
+    $('#acrossOpponent').hover(
+		  function(){ //mouse over
+        view.SlidePanels($(this),"close", "top");		
+		  },
+		  function(){ //mouse out
+        view.SlidePanels($(this),"open", "top");
+		  }
+	  );
+
+
+    // wire the logic in deck drawing
+    $('#playerDeck').click(function() {
+      view.newCard('blackBeard');
+    });
+    
+    // wire the hand logic
+    $('#actionTableau').droppable({
+      tolerance : "pointer",
+      drop : function(event, ui) {
+        model.dropActionTableau(ui.draggable);
+        $(this).effect('highlight');
+      }
+    });
+    
+    $('#playerHand').droppable({
+      tolerance : "pointer",
+      drop : function(event, ui) {
+        model.dropPlayerHand(ui.draggable);
+      }
+    });
+    
+    // wire the drop logic for the discard
+    $('#playerDiscard').droppable({
+      drop : function(event, ui) {
+        $(this).effect('highlight');
+        $(this).append(ui.draggable);
+        ui.draggable.css({
+          position: 'absolute',
+          top : '0',
+          left : '0'
+        });
+        ui.draggable.draggable({ // undraggable
+          disabled : true
+        });
+      }
+    });
+  } // End init
+  
+  /****************************************************************/
+  /* Card management */
+  /****************************************************************/
+  
+  // gain a card in hand given the card id
+  this.newCard = function(cid) {
+
+    var c = cardData[cid]
+    var $img = $('<img/>').attr({
+      src : 'img/' + c.img
+    });
+    var $title = $('<span/>').text(c.name).attr({
+      'class' : 'name'
+    });
+    var $cost = $('<span/>').text(c.cost).attr({
+      'class' : 'cost'
+    });
+    var $effects = $('<span/>').html(c.effect).attr({
+      'class' : 'effect'
+    });
+
+    var $card = $('<div/>').attr({
+      'class' : 'card',
+    }).append($title, $cost, $img, $effects);
+    // keep cards on top of each others when clicked or dragged
+    $card.draggable({
+      start : function() {
+        $(this).css({rotate:'', x:'', y:'', transform:''});
+      },
+      revert : function(socketObj) {
+        if(socketObj === false)
+        {
+          setTimeout(function() {view.spreadHand($('#playerHand').children())}, view.revertAnimationDuration);
+          return true;
+        }
+        else {
+          setTimeout(function() {view.spreadHand($('#playerHand').children())});
+          return false;
+        }
+      },
+      revertDuration: view.revertAnimationDuration,
+      containment : '#gameBoard',
+      stack: '.card',
+      opacity: 0.5,
+    });
+
+    view.addCardToHand($card);
+  } // end newCard
+  
+  /****************************************************************/
+  /*  Scrolling effect  */
+  /****************************************************************/
+    //slide in/out left pane function
+	this.SlidePanels = function(container,action, pos){
+	  $outer_container = container;
+		var speed=900;
+		if (pos == "left" || pos == "right") {
+		  openAnim = {width: 100};
+		  stopAnim = {width: 710};
+		}
+		else if (pos == "top") {
+		  openAnim = {height: 100};
+		  stopAnim = {height: 710};
+		}
+		else {
+  		return false;
+		}
+		
+		var width = $outer_container.width();
+		var easing="easeInOutExpo";
+		if(action=="open"){
+			$outer_container.stop().animate(
+			openAnim, 
+			speed,easing, 
+			function() {
+			  $outer_container.css({'background-color':''});
+			});
+
+			
+		} else {
+			$outer_container.stop().animate(stopAnim, speed, easing);		
+      $outer_container.css({'background-color':'green'});
+		}
+	}
+
+  /****************************************************************/
+  /*  Card animations   */
+  /****************************************************************/
+
   this.revertAnimationDuration = 500;
 
   this.addCardToTableau = function(card) {
@@ -56,7 +244,7 @@ function View() {
         angle+=stepAngle; 
       }
     }    
-  }
+  } // end rotateHand
   
   this.spreadHand = function(cards) {
     curLeft = 0;
@@ -66,7 +254,7 @@ function View() {
       $(cards[i]).css({left:curLeft, top:0, position:'absolute', 'z-index':startZ++});
       curLeft+=30;
     }
-  }
+  } // end spreadHand
     
   this.addCardToHand = function(card) {
     $('#playerHand').append(card);
@@ -74,125 +262,10 @@ function View() {
     cards = $('#playerHand').children();
     this.reArrangeHand(cards);
   }
-}
-
-
-// model data
-var cardData = {
-  'anneBonny' : {
-    'name' : 'Anne Bonny',
-    'cost' : 5,
-    'img' : 'anne_bonny.jpg',
-    'effect' : '+3 cards'
-  },
-  'blackBart' : {
-    'name' : 'Black Bart',
-    'cost' : 4,
-    'img' : 'black_bart.jpg',
-    'effect' : '+1 card<br/>+1 buy'
-  },
-  'blackBeard' : {
-    'name' : 'Black Beard',
-    'cost' : 3,
-    'img' : 'black_beard.jpg',
-    'effect' : '+1 coin'
-  }
-}
-
-// hack to keep cards on top of each others when clicked or dragged
-var curZ = 1;
-
-// gain a card in hand given the card id
-var gainCard = function(cid) {
-
-  var c = cardData[cid]
-  var $img = $('<img/>').attr({
-    src : 'img/' + c.img
-  });
-  var $title = $('<span/>').text(c.name).attr({
-    'class' : 'name'
-  });
-  var $cost = $('<span/>').text(c.cost).attr({
-    'class' : 'cost'
-  });
-  var $effects = $('<span/>').html(c.effect).attr({
-    'class' : 'effect'
-  });
-
-  var $card = $('<div/>').attr({
-    'class' : 'card',
-  }).append($title, $cost, $img, $effects);
-  // keep cards on top of each others when clicked or dragged
-  $card.draggable({
-    start : function() {
-      $(this).css({rotate:'', x:'', y:'', transform:''});
-    },
-    revert : function(socketObj) {
-      if(socketObj === false)
-      {
-        setTimeout(function() {view.spreadHand($('#playerHand').children())}, view.revertAnimationDuration);
-        return true;
-      }
-    },
-    revertDuration: view.revertAnimationDuration,
-    containment : '#gameBoard',
-    stack: '.card',
-    opacity: 0.35,
-    //revert : 'invalid' // revert when dropped at a wrong location
-  });
-  $card.click(function() {
-
-  });
-
-  view.addCardToHand($card);
-
-}
+  
+} // end class View()
 
 // on load
 $(function() {
-  $.fn.disableSelection = function() {
-        return this
-                 .attr('unselectable', 'on')
-                 .css('user-select', 'none')
-                 .on('selectstart', false);
-    };
-  $('gameBoard').click(function() {
-  });
-
-  // wire the logic in deck drawing
-  $('#playerDeck').click(function() {
-    gainCard('blackBeard');
-  });
-  
-  // wire the hand logic
-  $('#actionTableau').droppable({
-    tolerance : "pointer",
-    drop : function(event, ui) {
-      model.dropActionTableau(ui.draggable);
-      $(this).effect('highlight');
-    }
-  });
-  
-  $('#playerHand').droppable({
-    tolerance : "pointer",
-    drop : function(event, ui) {
-      model.dropPlayerHand(ui.draggable);
-    }
-  });
-  
-  // wire the drop logic for the discard
-  $('#playerDiscard').droppable({
-    drop : function(event, ui) {
-      $(this).effect('highlight');
-      $(this).append(ui.draggable);
-      ui.draggable.css({
-        position: 'absolute',
-        top : '0',
-        left : '0'
-      });
-      ui.draggable.draggable({ // undraggable
-        disabled : true
-      });
-    }
-  });
+  view.init();
 })

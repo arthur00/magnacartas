@@ -22,7 +22,7 @@ function Model(view) {
     tableau.push(card);
     view.addCardToTableau(card);
   }
-
+  
   /**** Events ****/
   this.dropPlayerHand = function(card) {
     addCardToHand(card);

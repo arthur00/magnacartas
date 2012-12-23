@@ -175,4 +175,13 @@ body {
     height:100px;
     width:480px;  
   }
+  
+  
+/********************/
+/* Side scrolling menu */
+
+#customScrollBox {
+  height:inherit;
+  width:inherit;
+}
 
