@@ -10,18 +10,24 @@ class Player():
     def __init__(self, game, name, conn_handler, pos):
         self._game = game
         self._handler = conn_handler
+        conn_handler.set_player(self)
         self.name = name
-        self.pos = pos # position in the table
         self.score = 0
 
     def __repr__(self):
-        return '<Player self.name>'
+        return '<Player %s>' % self.name
     def __str__(self):
         return self.__repr__()
 
 
-    def serialize(self):
-        return {'name':self.name, 'pos': self.pos}
+    def serialize(self, *attr_names):
+        """ serialize('name', 'score') should return 
+        {'name': self.name, 'score: self.score} 
+        """
+        d = {}
+        for attr in attr_names:
+            d[attr] = getattr(self, attr)
+        return d
 
 
     @property
@@ -29,11 +35,18 @@ class Player():
         return self._handler != None
 
 
-    def disconnect(self):
-        """ The player's endpoint disconnected. """
-        self._game.remove_player(self)
-        logger.info('player left: %s' % self.name)
-        self._handler = None
+    def on_disconnect(self):
+        """ My socket closed. Notify the game. """
+        if self._handler:
+            self._game.remove_player(self)
+            self._handler = None
+            logger.info('player left: %s' % self.name)
+
+
+    def kick_out(self):
+        """ The game kicks me out, eg when the game has ended. """
+        self._handler.close()
+        logger.info('player kicked: %s' % self.name)
 
 
     def send(self, msg):
@@ -41,39 +54,66 @@ class Player():
         self._handler.send(msg)
 
 
-    def player_joined(self, player):
+    def welcome(self, table, numplayers):
+        """ Send the current configuration of the table. 
+        The game has not started yet. 
+        """
+        logger.info('player joined: %s' % self.name)
+        data = {'table':[p.serialize('name') for p in table],
+                'numPlayers':numplayers
+                }
+        msg = {'welcome': data}
+        self.send(msg)
+
+
+    def player_joined(self, table, new_player):
         """ Notify the client that another player joined. """
-        msg = {'playerJoined': player.serialize()}
+        data = {'table': [player.serialize('name') for player in table],
+                'newPlayer': new_player.serialize('name')
+                }
+        msg = {'playerJoined': data}
         self.send(msg)
 
 
-    def player_left(self, player):
+    def player_left(self, table, old_player):
         """ Notify the client that another player left. """
-        msg = {'playerLeft': player.serialize()}
+        data = {'table': [player.serialize('name') for player in table],
+                'oldPlayer': old_player.serialize('name')
+                }
+        msg = {'playerLeft': data}
         self.send(msg)
 
-
-    def welcome(self, table):
-        msg = {'welcome': {'table':[p.serialize() for p in table]}}
-        self.send(msg)
 
     def game_start(self, table, first_player):
-        data = {'table':[p.serialize() for p in table]}
-        data['firstPlayer'] = first_player.serialize()
-        data['myPos'] = self.pos
+        """ Notify the client of the beginning of the game """
+        data = {'table':[p.serialize('name') for p in table],
+                'curPlayer': first_player.serialize('name')
+                }
         msg = {'gameStart': data}
         self.send(msg)
 
-    def game_over(self, table, iswinner):
-        scores = []
-        for player in table:
-            pdata = {'player':player.serialize()}
-            pdata['score'] = player.score
-            scores.append(pdata)
-        msg = {'gameOver': {'scores':scores, 'winner':iswinner}}
+
+    def game_over(self, table, winner):
+        """ This player has won! """
+        data = {'table': [player.serialize('name', 'score') for player in table],
+                'winner': winner.serialize('name', 'score')
+                }
+        msg = {'gameOver': data}
         self.send(msg)
 
 
+    def on_endMyTurn(self):
+        """ The client says his turn ended. """
+        self._game.end_turn(self)
 
 
+    def end_turn(self, prev_player, next_player):
+        """ Notify the client that someone's turn ended, 
+        and someone's turn begins.
+        """
+        data = {'prev': prev_player.serialize('name'),
+                'next': next_player.serialize('name')
+                }
+        msg = {'endTurn': data}
+        self.send(msg)
 

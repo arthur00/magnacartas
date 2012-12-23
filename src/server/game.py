@@ -11,26 +11,22 @@ class PirateGame():
 
     def __init__(self, port, url, numplayers):
         """ Init state and start web server. """
-        self.reset(numplayers)
+        self.numplayers = numplayers
+        self.table = []
+        self.reset()
         set_gateway(self) # to receive messages from the tornado handlers
         start_server(port, url) # start tornado
 
 
-    def reset(self, numplayers):
-        """ Init the game state. """
-        self.numplayers = numplayers
+    def reset(self):
+        """ Remove any previously connected player.
+        The game starts when enough players are connected.  
+        """
+        for player in self.table:
+            player.kick_out()
         self.table = []
         self.game_started = False
         self.curindex = 0
-
-        
-    def serialize(self):
-        """ Return the list of connected players. """
-        splayers = [player.serialize() for player in self.table]
-        state = {'players': splayers}
-        if self.game_started:
-            state['curindex'] = self.curindex
-        return state
 
 
     def get_player(self, pname):
@@ -46,7 +42,6 @@ class PirateGame():
     def add_player(self, args, handler):
         """ Add a player and notify all other currently connected clients. 
         Only accept new players if the game did not start yet.
-        Return the new player instance to the socket.
         """
         pname = args['name']
 
@@ -60,52 +55,59 @@ class PirateGame():
             pos = len(self.table)
             new_player = Player(self, pname, handler, pos)
             # notify all current players
-            for cur_player in self.table:
-                cur_player.player_joined(new_player)
+            cur_players = list(self.table)
             self.table.append(new_player)
-            logger.info('player joined: %s' % str(pname))
-            # send him the current game state 
-            new_player.welcome(self.table)
-            if len(self.table) >= self.numplayers: #enough players to start
+            for cur_player in cur_players:
+                cur_player.player_joined(self.table, new_player)
+            # send  the current game state to the new player
+            new_player.welcome(self.table, self.numplayers)
+            # start the game if enough players are connected
+            if len(self.table) == self.numplayers:
                 self.start_game()
-
-            return new_player
 
 
     def remove_player(self, player):
-        """ Remove player if he was connected already. """
-        try:
-            self.table.remove(player)
-            for cur_player in self.table:
-                cur_player.player_left(player)
-            if len(self.table) == 1:
-                self.game_over()
-        except ValueError: # player not in the table
-            logger.error('player not found: %s' % player.name)
+        """ When a player disconnects, notify other players,
+        and restart the game if there is only one player left. 
+        """
+        self.table.remove(player)
+        for cur_player in self.table:
+            cur_player.player_left(self.table, player)
+        if len(self.table) == 1:
+            last_player = self.table[0]
+            self.game_over(last_player)
+
+
+    def game_over(self, winner):
+        """ A player won. Tell everyone, and restart the game. """
+        logger.info('game over: %s won' % winner.name)
+        for player in self.table:
+            player.game_over(self.table, winner)
+        self.reset()
 
 
     def start_game(self):
+        """ From now on, any player who leaves is considered a loser. """
         self.game_started = True
         start_player = self.table[self.curindex]
         for player in self.table:
             player.game_start(self.table, start_player)
 
 
-    def game_over(self):
-        """ The winner is the player with highest score. 
-        Notify everyone of the winner, and reset the game.
-        """
-        winner = self.table[0]
-        for player in self.table[1:]:
-            if player.score > winner.score:
-                winner = player
-        for player in self.table:
-            if player == winner:
-                player.game_over(self.table, True)
-            else:
-                player.game_over(self.table, False)
-        
-        self.reset(self.numplayers)
-        
-        
-        
+    def end_turn(self, player):
+        """ A player says he's ending his turn. Check if it was his turn. 
+        Then next player. """
+        cur_player = self.table[self.curindex]
+
+        if player == cur_player:
+            self.curindex = (self.curindex + 1) % len(self.table)
+            next_player = self.table[self.curindex]
+            logger.info('turn of: %s' % next_player.name)
+            for p in self.table:
+                p.end_turn(cur_player, next_player)
+
+        else: # not the current player: cheater?
+            logger.warn('player %s tried to end his turn,' % player.name +
+                        'but it was the turn of %s' % cur_player.name)
+
+
