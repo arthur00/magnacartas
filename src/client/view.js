@@ -151,12 +151,12 @@ function View() {
     
     curTop = 0;
     curLeft = 0;
-    cards = opponentHand.children();
+    cards = opponentHand.children(".card");
     startZ = 500;
     
     if (pos == "left" || pos == "right") {
         for ( i = 0; i < cards.length; i++ ) {
-          $(cards[i]).css({top:curTop-30, position:'absolute', 'z-index':startZ++});
+          $(cards[i]).css({top:curTop, position:'absolute', 'z-index':startZ++});
           curTop+=30;
         }
     }
@@ -256,8 +256,13 @@ function View() {
 
   this.addCardToTableau = function(card) {
     card.css({left: 0, top: 0, rotate: 0, position:'relative', x:0, y:0});
-    card.draggable( "disable" );
-    $('#actionTableau').append(card);
+    card.draggable( "disable" );    
+    $('#actionTableau').append(card);  
+    cards = $('#actionTableau').children();
+    
+    if (cards.length > 3) {
+      this.spreadHand(cards);
+    }
   }
   
   this.reArrangeHand = function(cards) {

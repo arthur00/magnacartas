@@ -171,7 +171,7 @@ body {
     top: 0px;
     left: 0px;
     height:480px;
-    width:100px;
+    width:105px;
     z-index: 1;
   }
 
@@ -179,14 +179,14 @@ body {
     top: 0px;
     right: 0px;
     height:480px;
-    width:100px;  
+    width:105px;  
     z-index: 1;
   }
 
   #acrossOpponent {
     top: 0px;
     left: 272px; /* (1024 - 480)/2 */
-    height:100px;
+    height:105px;
     width:480px;
     z-index: 1;  
   }
