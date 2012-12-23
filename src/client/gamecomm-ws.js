@@ -14,7 +14,6 @@ function GameCommWebSocket() {
 
   // socket opened: send my name
   socket.onopen = function() {
-    console.log('socket opened')
     GAMEMODEL.onConnectToGameServer();
   };
 
@@ -26,10 +25,12 @@ function GameCommWebSocket() {
   // model callbacks triggered when the socket receives a message
   rcv_callbacks = {
     'welcome' : GAMEMODEL.welcome,
-    'playerJoined' : GAMEMODEL.addPlayer,
-    'playerLeft' : GAMEMODEL.removePlayer,
+    'playerJoined' : GAMEMODEL.playerJoined,
+    'playerLeft' : GAMEMODEL.playerLeft,
     'gameStart' : GAMEMODEL.gameStart,
-    'gameOver': GAMEMODEL.gameOver
+    'gameOver' : GAMEMODEL.gameOver,
+    'endTurn' : GAMEMODEL.endTurn,
+    'otherCmd' : GAMEMODEL.dummy
   }
 
   // receive handler
@@ -39,18 +40,27 @@ function GameCommWebSocket() {
     for ( var cmd in m) {
       try {
         rcv_callbacks[cmd](m[cmd])
-      } catch (TypeError) { // callback not found
-        console.log('Callback not found for command: ' + cmd)
+      } catch (error) { // callback not found
+        console.log(error)
+        if (error instanceof TypeError) {
+          console.log('Maybe a callback was not found for command: ' + cmd)
+        }
       }
     }
   };
 
+  // {'join': {'name':'arthur'}}
   this.sendJoinGame = function(playerId) {
     var args = {
       'name' : playerId
     }
     this.send('join', args);
   };
+
+  // {'endMyTurn': {}}
+  this.sendEndMyTurn = function() {
+    this.send('endMyTurn', {})
+  }
 
   // Convert a message in JSON and send it right away.
   this.send = function(msgType, content) {

@@ -7,6 +7,7 @@ from logger import logger
 
 gateway = None
 def set_gateway(gw):
+    """ The game sets itself as the gateway when it starts. """
     global gateway
     gateway = gw
 
@@ -16,6 +17,9 @@ class ClientHandler(WebSocketHandler):
     def __init__(self, application, request, **kwargs):
         WebSocketHandler.__init__(self, application, request, **kwargs)
         self._player = None
+
+    def set_player(self, player):
+        self._player = player
 
     def open(self):
         """ When a player opens a connection, don't do anything. """
@@ -29,7 +33,7 @@ class ClientHandler(WebSocketHandler):
     def on_close(self):
         """ Notify the player model that the client logged out. """
         if self._player:
-            self._player.disconnect()
+            self._player.on_disconnect()
 
     def send(self, msg):
         """ Send in JSON format """
@@ -42,15 +46,18 @@ class ClientHandler(WebSocketHandler):
         m = json.loads(msg)
         #logger.debug('received ' + str(m))
         if 'join' in m:
-            args = m['join']
-            player = gateway.add_player(args, self)
-            self._player = player
+            if not self._player: # in case the same player sends 'join' twice
+                args = m['join']
+                gateway.add_player(args, self)
         else:
             # if m is {'draw': {'qty':3}}
-            # then call game.on_draw({'qty':3})
+            # then call player.on_draw({'qty':3})
             for cmd, args in m.items():
                 try:
-                    getattr(gateway, 'on_' + cmd)(args)
+                    if len(args):
+                        getattr(self._player, 'on_' + cmd)(args)
+                    else: # no args passed
+                        getattr(self._player, 'on_' + cmd)()
                 except AttributeError:
                     logger.error('No such callback: ' + 'on_' + cmd)
 
