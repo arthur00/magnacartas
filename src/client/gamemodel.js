@@ -37,21 +37,31 @@ function GameModel(playerId) {
     console.log(pname + ' left')
   }
 
-  // This marks the beginning of the first turn of startingPlayer.
-  // state = {'table': someTable, 'curPlayer': startingPlayer}
+  // This indicates who is the first player,
+  // and NOT the beginning of the first turn of startingPlayer.
+  // Beginning and end of turns are indicated by endTurn.
+  // state = {'table': someTable,
+  // 'piles': [card1, card2, ...],
+  // 'startingPlayer': {'name': 'arthur'}}
+  // 
+  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
+  // card2 = {'name': 'Smithy', 'cost': 4, 'qty': 10, 'qtyLeft': 10,
+  // 'desc': 'Draw 3 cards'}
   this.gameStart = function(state) {
-    var pname = state.curPlayer.name
-    if (pname == self.myName) {
-      console.log('my turn!!')
-    } else {
-      console.log('turn of ' + pname)
+    console.log(state)
+    var pileNames = new Array()
+    for ( var i = 0; i < state.piles.length; i++) {
+      pileNames.push(state.piles[i].name)
     }
+    console.log('Game started. ' + state.startingPlayer.name + ' will start.'
+        + 'Piles available: ' + pileNames.join())
+
   }
 
   // Game is over.
   // state = {'table': aTable, 'winner': aPlayer}
   this.gameOver = function(state) {
-    winner = state.winner
+    var winner = state.winner
     console.log(winner.name + ' won with ' + winner.score + ' points')
   }
 
@@ -62,12 +72,39 @@ function GameModel(playerId) {
 
   // Someone's turn ended, and the next player's turn starts.
   // state = {'prev':playerWhoseTurnIsOver, 'next':playerWhoseTurnStarts}
+  // !! During the first turn of the first player, there is no prev !!
   this.endTurn = function(state) {
-    console.log('turn of ' + state.next.name)
+    var pname = state.next.name
+    if (pname == self.myName) {
+      console.log('my turn!!')
+    } else {
+      console.log('turn of ' + pname)
+    }
   }
 
-  // a dummy callback for the network
-  this.dummy = function(args) {
+  // args = {'size': 10} for a starting deck of 10 cards
+  this.setDeck = function(args) {
+  }
+
+  // args = {'hand': [card1, card2, ..., card5]}
+  // card1 = {'name' = '', 'cost': 1, 'fame': 0, 'desc': 'Draw 3 cards',
+  // 'qty': 10, 'qtyleft': 6}
+  this.drawHand = function(args) {
+    var cardNames = new Array()
+    var hand = args.hand
+    for ( var i = 0; i < hand.length; i++) {
+      cardNames.push(hand[i].name)
+    }
+    console.log('I draw ' + cardNames.join())
+  }
+
+  // Another player just drew his hand.
+  // This is just a notification from the server.
+  // args = {'player': {'name':'art'}, 'size': 5}
+  this.otherDrawHand = function(args) {
+    var pname = args.player.name
+    var num = args.size
+    console.log(pname + ' draws ' + num + ' cards into his hand')
   }
 
 }
