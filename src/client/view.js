@@ -142,6 +142,46 @@ function View() {
   } // End init
   
   /****************************************************************/
+  /* Card movement */
+  /****************************************************************/
+  var leftEndPoint = [50,240];
+  var rightEndPoint = [1024-50,240];
+  var topEndPoint = [50,240];
+  
+  this.drawCardFromPlayer = function(destination, ctype) {
+    var card = $('#playerHand ._c_'+ctype).get(0);
+    var xstart = $(card).offset().left;
+    var ystart = $(card).offset().top;
+    var startPoint = [xstart,ystart];
+    $('#floating').append(card);
+    $(card).css({position:'fixed', top:ystart, left:xstart});    
+    if (destination == "left") {
+      $(card).animate({
+        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],leftEndPoint])},
+        1000,
+        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
+      );
+    }
+    else if (destination == "right") {
+      $(card).animate({
+        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],rightEndPoint])},
+        1000,
+        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
+      );
+    }
+    else if (destination == "top") {
+      $(card).animate({
+        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],topEndPoint])},
+        1000,
+        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
+      );
+    }
+    else {
+      return False;
+    }
+  }
+  
+  /****************************************************************/
   /* Card management */
   /****************************************************************/
   
@@ -149,10 +189,10 @@ function View() {
     var $card = $('<div/>').attr({'class': 'faceDown card'});
     opponentHand.append($card);
     
-    curTop = 0;
-    curLeft = 0;
-    cards = opponentHand.children(".card");
-    startZ = 500;
+    var curTop = 0;
+    var curLeft = 0;
+    var cards = opponentHand.children(".card");
+    var startZ = 500;
     
     if (pos == "left" || pos == "right") {
         for ( i = 0; i < cards.length; i++ ) {
@@ -169,9 +209,9 @@ function View() {
   }
   
   // gain a card in hand given the card id
-  this.newCard = function(cid) {
+  this.newCard = function(ctype) {
 
-    var c = cardData[cid]
+    var c = cardData[ctype];
     var $img = $('<img/>').attr({
       src : 'img/' + c.img
     });
@@ -186,7 +226,7 @@ function View() {
     });
 
     var $card = $('<div/>').attr({
-      'class' : 'card',
+      'class' : 'card _c_'+ctype,
     }).append($title, $cost, $img, $effects);
     // keep cards on top of each others when clicked or dragged
     $card.draggable({
