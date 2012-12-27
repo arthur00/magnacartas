@@ -172,10 +172,14 @@ function View() {
   /****************************************************************/
   var leftEndPoint = [50,240];
   var rightEndPoint = [1024-50,240];
-  var topEndPoint = [50,240];
+  var acrossEndPoint = [512,20];
+  var playerEndPoint = [512,640];
   
-  this.drawCardFromPlayer = function(destination, ctype) {
-    var card = $('#playerHand ._c_'+ctype).get(0);
+  this.moveCardFromHand = function(source, destination, ctype) {
+    if (source == "player") 
+      var card = $('#' + source + 'Hand ._c_'+ctype).get(0);
+    else
+      var card = $('#' + source + 'Cards').children().get(0);
     var xstart = $(card).offset().left;
     var ystart = $(card).offset().top;
     var startPoint = [xstart,ystart];
@@ -197,13 +201,23 @@ function View() {
     }
     else if (destination == "across") {
       $(card).animate({
-        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],topEndPoint])},
+        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],acrossEndPoint])},
+        1000,
+        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
+      );
+    }
+    else if (destination == "player") {
+      $(card).animate({
+        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],playerEndPoint])},
         1000,
         function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
       );
     }
     else {
       return False;
+    }
+    if (source == "player") {
+      this.reArrangeHand($('#playerHand').children());
     }
   }
   
