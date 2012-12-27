@@ -30,7 +30,10 @@ function GameCommWebSocket() {
     'gameStart' : GAMEMODEL.gameStart,
     'gameOver' : GAMEMODEL.gameOver,
     'endTurn' : GAMEMODEL.endTurn,
-    'otherCmd' : GAMEMODEL.dummy
+    'setDeck' : GAMEMODEL.setDeck,
+    'drawHand': GAMEMODEL.drawHand,
+    'otherDrawHand': GAMEMODEL.otherDrawHand,
+    'discardHand': GAMEMODEL.discardHand
   }
 
   // receive handler

@@ -1,6 +1,8 @@
 from logger import logger
 from player import Player
+from server.card import pick_piles, CopperCard, CommodoreCard
 from tornadocomm import set_gateway, start_server
+import random
 
 
 
@@ -26,8 +28,12 @@ class PirateGame():
             player.kick_out()
         self.table = []
         self.game_started = False
-        self.curindex = 0
+        self.piles = []
+        self._curindex = 0
 
+    @property
+    def cur_player(self):
+        return self.table[self._curindex]
 
     def get_player(self, pname):
         """ Return the connected player with that name. 
@@ -87,21 +93,49 @@ class PirateGame():
 
 
     def start_game(self):
-        """ From now on, any player who leaves is considered a loser. """
+        """ From now on, any player who leaves is considered a loser. 
+        First send the piles and the table/order of the players.
+        Then send the player's deck and hand.
+        """
+
+        # start the game: send the player seating and the card piles
+        self.piles = pick_piles(2, self)
+        start_player = self.table[self._curindex]
         self.game_started = True
-        start_player = self.table[self.curindex]
         for player in self.table:
-            player.game_start(self.table, start_player)
+            player.game_start(self.table, self.piles, start_player)
+
+        # each player prepares his hand and deck
+        starting_deck = [CopperCard() for _ in range(7)]
+        starting_deck += [CommodoreCard(self) for _ in range(3)]
+        for player in self.table:
+            pdeck = list(starting_deck) # deep copy
+            random.shuffle(pdeck)
+            player.set_deck(pdeck)
+            num_drawn = player.draw_hand(5)
+            [p.other_draw_hand(player, num_drawn) for p in self.table if p is not player]
+
+        # begin starting player's turn
+        logger.info('turn of: %s' % start_player.name)
+        for player in self.table:
+            player.end_turn(None, start_player)
+
 
 
     def end_turn(self, player):
         """ A player says he's ending his turn. Check if it was his turn. 
         Then next player. """
-        cur_player = self.table[self.curindex]
+        cur_player = self.table[self._curindex]
 
         if player == cur_player:
-            self.curindex = (self.curindex + 1) % len(self.table)
-            next_player = self.table[self.curindex]
+            # discard old hand and draw new hand 
+            cards = player.discard_hand()
+            [p.someone_discard_hand(player, cards) for p in self.table]
+            num_drawn = player.draw_hand(5)
+            [p.other_draw_hand(player, num_drawn) for p in self.table if p is not player]
+            # pick new player 
+            self._curindex = (self._curindex + 1) % len(self.table)
+            next_player = self.table[self._curindex]
             logger.info('turn of: %s' % next_player.name)
             for p in self.table:
                 p.end_turn(cur_player, next_player)
