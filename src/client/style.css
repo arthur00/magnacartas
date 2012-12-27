@@ -177,7 +177,7 @@ body {
 }
 
 
-#leftCards {
+#leftHand {
   top: 0px;
   left: 0px;
   height:480px;
@@ -185,7 +185,7 @@ body {
   z-index: 1;
 }
 
-#rightCards {
+#rightHand {
   top: 0px;
   right: 0px;
   height:480px;
@@ -193,7 +193,7 @@ body {
   z-index: 1;
 }
 
-#acrossCards {
+#acrossHand {
   top: 0px;
   left: 272px; /* (1024 - 480)/2 */
   height:50px;

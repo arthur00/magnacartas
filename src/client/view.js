@@ -161,9 +161,9 @@ function View() {
     
     $('#playerDiscard').click(
         function() {
-            view.newCardOpponent($('#leftCards'),"left");
-            view.newCardOpponent($('#rightCards'),"right");
-            view.newCardOpponent($('#acrossCards'),"across");
+            view.newCardOpponent("left");
+            view.newCardOpponent("right");
+            view.newCardOpponent("across");
     });
   } // End init
   
@@ -179,7 +179,7 @@ function View() {
     if (source == "player") 
       var card = $('#' + source + 'Hand ._c_'+ctype).get(0);
     else
-      var card = $('#' + source + 'Cards').children().get(0);
+      var card = $('#' + source + 'Hand').children().get(0);
     var xstart = $(card).offset().left;
     var ystart = $(card).offset().top;
     var startPoint = [xstart,ystart];
@@ -216,9 +216,7 @@ function View() {
     else {
       return False;
     }
-    if (source == "player") {
-      this.reArrangeHand($('#playerHand').children());
-    }
+    this.reArrangeHand(source);
   }
   
   /****************************************************************/
@@ -301,11 +299,11 @@ function View() {
       revert : function(socketObj) {
         if(socketObj === false)
         {
-          setTimeout(function() {view.spreadHand($('#playerHand').children())}, view.revertAnimationDuration);
+          setTimeout(function() {view.reArrangeHand("player")}, view.revertAnimationDuration);
           return true;
         }
         else {
-          setTimeout(function() {view.spreadHand($('#playerHand').children())});
+          setTimeout(function() {view.reArrangeHand("player")});
           return false;
         }
       },
@@ -365,7 +363,7 @@ function View() {
 			  } 
 			  );		
 		}
-	}
+	} // end SlidePanels
 
   /****************************************************************/
   /*  Card animations   */
@@ -373,16 +371,37 @@ function View() {
 
   this.revertAnimationDuration = 500;
   
-  this.newCardOpponent = function(opponentHand, pos) {
+  this.newCardOpponent = function(pos) {
     var $card = $('<div/>').attr({'class': 'faceDown card'});
-    opponentHand.append($card);
-    
+    $('#' + pos + 'Hand').append($card);
+    this.reArrangeHand(pos);
+  }
+
+  this.addCardToHand = function(card) {
+    $('#playerHand').append(card);
+    this.reArrangeHand("player");
+  }
+  
+  this.reArrangeHand = function(pos)
+  {
     var curTop = 0;
     var curLeft = 0;
-    var cards = opponentHand.children(".card");
-    var startZ = zlayer1;
+    if (pos == "tableau")
+      var cards = $('#actionTableau').children(".card");
+    else  
+      var cards = $('#' + pos + 'Hand').children(".card");
+    if (pos == "player" || pos == "tableau") 
+      var startZ = zlayer2;
+    else
+      var startZ = zlayer1;
     
-    if (pos == "left") {
+    if (pos =="player" || pos == "tableau") {
+        for ( i = 0; i < cards.length; i++ ) {
+          $(cards[i]).css({left:curLeft, top:0, position:'absolute', 'z-index':startZ++});
+          curLeft+=30;
+        }
+    }
+    else if (pos == "left") {
         for ( i = 0; i < cards.length; i++ ) {
           $(cards[i]).css({rotate:90, top:curTop, left:-80, position:'absolute', 'z-index':startZ++});
           curTop+=30;
@@ -394,7 +413,7 @@ function View() {
           curTop+=30;
         }
     }
-    else {
+    else if (pos == "across"){
         for ( i = 0; i < cards.length; i++ ) {
           $(cards[i]).css({rotate:180, left:curLeft, top:-110, position:'absolute', 'z-index':startZ++});
           curLeft+=30;
@@ -409,13 +428,12 @@ function View() {
     cards = $('#actionTableau').children();
     
     if (cards.length > 3) {
-      this.spreadHand(cards);
+      this.reArrangeHand("tableau");
     }
   }
   
-  this.reArrangeHand = function(cards) {
-    // this.rotateHand(cards);
-    this.spreadHand(cards);
+  this.cleanTableau = function() {
+    $($('#actionTableau').children()).remove('.card');
   }
   
   this.rotateHand = function(cards) {
@@ -448,24 +466,6 @@ function View() {
       }
     }    
   } // end rotateHand
-  
-  this.spreadHand = function(cards) {
-    curLeft = 0;
-    startZ = zlayer2;
-    
-    for ( i = 0; i < cards.length; i++ ) {
-      $(cards[i]).css({left:curLeft, top:0, position:'absolute', 'z-index':startZ++});
-      curLeft+=30;
-    }
-  } // end spreadHand
-    
-  this.addCardToHand = function(card) {
-    $('#playerHand').append(card);
-    
-    cards = $('#playerHand').children();
-    this.reArrangeHand(cards);
-  }
-  
 } // end class View()
 
 // on load
