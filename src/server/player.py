@@ -1,5 +1,5 @@
 from logger import logger
-
+from random import shuffle
 
 
 class Player():
@@ -125,15 +125,27 @@ class Player():
 
 
     def draw_hand(self, num_cards):
-        """ Draw X cards from my deck to my hand.
-        TODO: check if deck is empty, and replace deck by shuffled discard pile 
+        """ Draw num_cards cards from my deck to my hand.
+        If my deck is empty, shuffle the discard pile, and consider it my deck.
+        If I have less than num_cards in my discard + deck, 
+        then I draw them all.
         """
-        self.hand = []
+        
         for _ in range(num_cards):
-            card = self.deck.pop()
+            try:
+                card = self.deck.pop()
+            except IndexError: # empty: replace the deck by the discard pile
+                if len(self.discard) == 0: # not enough cards to draw from
+                    break
+                cards = self.discard[:]
+                self.discard = []
+                shuffle(cards)
+                self.deck = cards
+                card = self.deck.pop()
             self.hand.append(card)
         data = {'hand': [card.serialize() for card in self.hand]}
         self.send('drawHand', data)
+        return len(self.hand)
 
 
     def other_draw_hand(self, player, num_cards):
@@ -143,3 +155,21 @@ class Player():
         self.send('otherDrawHand', data)
 
 
+    def discard_hand(self):
+        """ Shuffle my hand and put in in the discard pile. """
+        hand = self.hand[:] # copy
+        self.hand = []
+        shuffle(hand)
+        for card in hand:
+            self.discard.append(card)
+        hand.reverse() # so that the 1st card is the top of the discard pile
+        return hand
+
+
+    def someone_discard_hand(self, player, cards):
+        """ Notify me that a player discarded his hand. 
+        This player CAN be myself.
+        """
+        data = {'player': player.serialize('name'),
+                'cards': [card.serialize() for card in cards]}
+        self.send('discardHand', data)

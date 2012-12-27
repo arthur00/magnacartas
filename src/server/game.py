@@ -1,6 +1,6 @@
 from logger import logger
 from player import Player
-from server.card import pick_piles, CopperCard, SmithyCard
+from server.card import pick_piles, CopperCard, CommodoreCard
 from tornadocomm import set_gateway, start_server
 import random
 
@@ -106,18 +106,17 @@ class PirateGame():
             player.game_start(self.table, self.piles, start_player)
 
         # each player prepares his hand and deck
-        starting_deck = [CopperCard() for _ in range(4)]
-        starting_deck += [SmithyCard(self) for _ in range(3)]
+        starting_deck = [CopperCard() for _ in range(7)]
+        starting_deck += [CommodoreCard(self) for _ in range(3)]
         for player in self.table:
             pdeck = list(starting_deck) # deep copy
             random.shuffle(pdeck)
             player.set_deck(pdeck)
-            player.draw_hand(5)
-            for other_player in self.table:
-                if other_player is not player:
-                    other_player.other_draw_hand(player, 5)
+            num_drawn = player.draw_hand(5)
+            [p.other_draw_hand(player, num_drawn) for p in self.table if p is not player]
 
         # begin starting player's turn
+        logger.info('turn of: %s' % start_player.name)
         for player in self.table:
             player.end_turn(None, start_player)
 
@@ -129,6 +128,12 @@ class PirateGame():
         cur_player = self.table[self._curindex]
 
         if player == cur_player:
+            # discard old hand and draw new hand 
+            cards = player.discard_hand()
+            [p.someone_discard_hand(player, cards) for p in self.table]
+            num_drawn = player.draw_hand(5)
+            [p.other_draw_hand(player, num_drawn) for p in self.table if p is not player]
+            # pick new player 
             self._curindex = (self._curindex + 1) % len(self.table)
             next_player = self.table[self._curindex]
             logger.info('turn of: %s' % next_player.name)

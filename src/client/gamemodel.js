@@ -48,12 +48,11 @@ function GameModel(playerId) {
   // card2 = {'name': 'Smithy', 'cost': 4, 'qty': 10, 'qtyLeft': 10,
   // 'desc': 'Draw 3 cards'}
   this.gameStart = function(state) {
-    console.log(state)
     var pileNames = new Array()
     for ( var i = 0; i < state.piles.length; i++) {
       pileNames.push(state.piles[i].name)
     }
-    console.log('Game started. ' + state.startingPlayer.name + ' will start.'
+    console.log('Game started. ' + state.startingPlayer.name + ' will start. '
         + 'Piles available: ' + pileNames.join())
 
   }
@@ -105,6 +104,22 @@ function GameModel(playerId) {
     var pname = args.player.name
     var num = args.size
     console.log(pname + ' draws ' + num + ' cards into his hand')
+  }
+
+  // A player discarded his hand. This player CAN be myself.
+  // args = {'player': {'name': 'arthur'}, 'cards': [card1, card2, ...]}
+  this.discardHand = function(args) {
+    var cardNames = new Array()
+    var cards = args.cards
+    for ( var i = 0; i < cards.length; i++) {
+      cardNames.push(cards[i].name)
+    }
+    var pname = args.player.name
+    if (pname == self.myName) {
+      console.log('I discard ' + cardNames.join())
+    } else {
+      console.log(pname + ' discard ' + cardNames.join())
+    }
   }
 
 }

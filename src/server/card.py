@@ -64,7 +64,20 @@ class PirateCard(Card):
         d.update(Card.serialize(self))
         return d
 
+    def do_effect(self):
+        pass
 
+
+class CommodoreCard(PirateCard):
+    name = 'Commodore'
+    cost = 3
+    fame = 1
+    qty = 20
+    qty_left = 20
+    desc = 'Brig for 2 actions'
+    
+    
+    
 class SmithyCard(PirateCard):
     name = 'Smithy'
     cost = 4
@@ -82,5 +95,5 @@ class SmithyCard(PirateCard):
 
 def pick_piles(num, game):
     # TODO: should draw piles randomly
-    piles = [CopperCard(), SmithyCard(game)]
+    piles = [CopperCard(), CommodoreCard(game)]
     return piles
