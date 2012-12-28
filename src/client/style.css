@@ -6,6 +6,10 @@ body {
 	width: auto;
 }
 
+img {
+  pointer-events: none;
+}
+
 #gameBoard {
   display: inline-block;
 	margin: 5px;
@@ -22,6 +26,16 @@ body {
   -webkit-user-select: none;
   user-select: none;
   overflow:hidden;
+}
+
+/* Used to absorb clicks outside expanded/slided div */
+#hiddenLayer {
+  height:inherit;
+  width:inherit;
+  top:0;
+  left:0;
+  position:absolute;
+
 }
 
 .stacktop {
@@ -176,6 +190,17 @@ body {
   background-size: cover;
 }
 
+.close {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  top: -10px;
+  right: -10px;
+  
+  background-repeat:no-repeat;
+  background-image:url('img/xbutton.png');
+  background-size: cover;
+}
 
 #leftHand {
   top: 0px;
@@ -255,10 +280,10 @@ body {
   
   #leftLargeMat {
     position: absolute;
-    bottom: 80px;
-    left: 0px;
-    height:630px;
-    width:700px; /* same width as the expaning animation in view.js */
+    top: 0px;
+    left: 80px;
+    height:480px;
+    width:630px; /* same width as the expaning animation in view.js */
     z-index: 1;
   }
 
@@ -314,7 +339,7 @@ body {
     position: absolute;
     top: 80px;
     left: 0px;
-    height:630px;
+    height:620px;
     width:480px; /* same width as the expaning animation in view.js */
     z-index: 1;
   }
@@ -336,7 +361,34 @@ body {
   overflow-y: hidden;
 }
   
+#buyingBoard {
+  background-color: cornflowerblue;
+  border: 3px solid black;
+  border-radius: 10px;
+  left: 362px; /* (1024 - 600)/2 */
+  top: 160px;  
+  height:80px; /* extra 5 for not scrolling */
+  width:300px;
+  position: absolute;
+}
+
+  #smallBuying {
+    padding: 0px;
+    left: 0px;
+    top: 0px;  
+    height:60px; /* extra 5 for not scrolling */
+    width:300px;
+    position: absolute;
+  }
   
+  #largeBuying {
+    left: 0px; /* (1024 - 600)/2 */
+    top: 0px;  
+    margin: 10px;
+    height:710px; /* extra 5 for not scrolling */
+    width:780px;
+    position: absolute;
+  }
   
 /********************/
 /* Sliding menu */
