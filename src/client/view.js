@@ -1,6 +1,7 @@
 /*
  * A one-shot prototype to test a card game UI without using canvas. 
  */
+
 view = new View();
 model = new Model(view);
 
@@ -45,60 +46,85 @@ function View() {
   /****************************************************************/
   /* View Init */
   /****************************************************************/
+  var zlayer0 = 1;
+  var zlayer1 = 1000;
+  var zlayer2 = 2000;
+  var zlayer3 = 3000;
   
   this.init = function() {
-      $('#leftOppOK').hide();
-      $('#leftOppOK').css({rotate:180});
-      $('#rightOppOK').hide();
-      $('#acrossOppOK').hide();
-      $('#acrossOppOK').css({rotate:-   90});
+      $('#leftShrink').hide();
+      $('#leftShrink').css({rotate:180});
+      $('#rightShrink').hide();
+      $('#acrossShrink').hide();
+      $('#acrossShrink').css({rotate: 90});
+      $('#playerShrink').hide();
+      $('#playerShrink').css({rotate: 90});
       
-      $('#leftOpponent').click(
+      $('#leftLargeMat').hide();
+      $('#rightLargeMat').hide();
+      $('#acrossLargeMat').hide();
+      $('#playerLargeMat').hide();
+      
+      $('#playerMat').click(
 		  function() { //mouse over
-              view.SlidePanels($(this),"open", "left");
-              $('#leftOppOK').show();
+              view.SlidePanels($(this),"open", "player");
+              $('#playerShrink').show();
 	   });
 		  
-      $('#leftOppOK').click(
+      $('#playerShrink').click(
 		  function(e) { //mouse out
 		      e.stopPropagation();
-		      $('#leftOppOK').hide();
-              view.SlidePanels($('#leftOpponent'),"close", "left");
+		      $('#playerShrink').hide();
+              view.SlidePanels($('#playerMat'),"close", "player");
+	   });
+                  
+      $('#leftMat').click(
+		  function() { //mouse over
+              view.SlidePanels($(this),"open", "left");
+              $('#leftShrink').show();
+	   });
+		  
+      $('#leftShrink').click(
+		  function(e) { //mouse out
+		      e.stopPropagation();
+		      $('#leftShrink').hide();
+              view.SlidePanels($('#leftMat'),"close", "left");
 	   });
 	   
 
-      $('#rightOpponent').click(
+      $('#rightMat').click(
 		  function() { //mouse over
-    		  $('#rightOppOK').show();
+    		  $('#rightShrink').show();
               view.SlidePanels($(this),"open", "right");
 	   });
 	  
 		  
-      $('#rightOppOK').click(
+      $('#rightShrink').click(
 		  function(e) { //mouse out
-		      $('#rightOppOK').hide();
+		      $('#rightShrink').hide();
 		      e.stopPropagation();
-              view.SlidePanels($('#rightOpponent'),"close", "right");
+              view.SlidePanels($('#rightMat'),"close", "right");
 	   });
 	   
-	   $('#acrossOpponent').click(
+	   $('#acrossMat').click(
 		  function() { //mouse over
-		      $('#acrossOppOK').show();
-              view.SlidePanels($(this),"open", "top");
+		      $('#acrossShrink').show();
+              view.SlidePanels($(this),"open", "across");
 	   });
 	  
 		  
-      $('#acrossOppOK').click(
+      $('#acrossShrink').click(
 		  function(e) { //mouse out
-		      $('#acrossOppOK').hide();
+		      $('#acrossShrink').hide();
 		      e.stopPropagation();
-              view.SlidePanels($('#acrossOpponent'),"close", "top");
+              view.SlidePanels($('#acrossMat'),"close", "across");
 	   });
 
 
     // wire the logic in deck drawing
     $('#playerDeck').click(function() {
-      view.newCard('blackBeard');
+      $card = view.newCard('blackBeard');
+      view.addCardToHand($card);
     });
     
     // wire the hand logic
@@ -135,9 +161,9 @@ function View() {
     
     $('#playerDiscard').click(
         function() {
-            view.newCardOpponent($('#leftOpponent'),"left");
-            view.newCardOpponent($('#rightOpponent'),"right");
-            view.newCardOpponent($('#acrossOpponent'),"top");
+            view.newCardOpponent("left");
+            view.newCardOpponent("right");
+            view.newCardOpponent("across");
     });
   } // End init
   
@@ -146,10 +172,14 @@ function View() {
   /****************************************************************/
   var leftEndPoint = [50,240];
   var rightEndPoint = [1024-50,240];
-  var topEndPoint = [50,240];
+  var acrossEndPoint = [512,20];
+  var playerEndPoint = [512,640];
   
-  this.drawCardFromPlayer = function(destination, ctype) {
-    var card = $('#playerHand ._c_'+ctype).get(0);
+  this.moveCardFromHand = function(source, destination, ctype) {
+    if (source == "player") 
+      var card = $('#' + source + 'Hand ._c_'+ctype).get(0);
+    else
+      var card = $('#' + source + 'Hand').children().get(0);
     var xstart = $(card).offset().left;
     var ystart = $(card).offset().top;
     var startPoint = [xstart,ystart];
@@ -169,9 +199,16 @@ function View() {
         function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
       );
     }
-    else if (destination == "top") {
+    else if (destination == "across") {
       $(card).animate({
-        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],topEndPoint])},
+        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],acrossEndPoint])},
+        1000,
+        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
+      );
+    }
+    else if (destination == "player") {
+      $(card).animate({
+        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],playerEndPoint])},
         1000,
         function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
       );
@@ -179,33 +216,59 @@ function View() {
     else {
       return False;
     }
+    this.reArrangeHand(source);
   }
   
   /****************************************************************/
-  /* Card management */
+  /* Card management */ 
   /****************************************************************/
   
-  this.newCardOpponent = function(opponentHand, pos) {
-    var $card = $('<div/>').attr({'class': 'faceDown card'});
-    opponentHand.append($card);
+  this.addCardToMat = function(ctype,pos) {
+    $smallMat = $('#' + pos + 'SmallMat');
+    $largeMat = $('#' + pos + 'LargeMat');
+
+    smallStack = $smallMat.children('._c_'+ctype);
     
-    var curTop = 0;
-    var curLeft = 0;
-    var cards = opponentHand.children(".card");
-    var startZ = 500;
-    
-    if (pos == "left" || pos == "right") {
-        for ( i = 0; i < cards.length; i++ ) {
-          $(cards[i]).css({top:curTop, position:'absolute', 'z-index':startZ++});
-          curTop+=30;
-        }
+    if (smallStack.length == 0) {
+      smallCard = view.newMatCard(ctype);
+      card = view.newCard(ctype);
+
+      var $counterSmall = $('<div/>');
+      $counterSmall.addClass('stackCounter');
+      $counterSmall.text('1');
+      
+      $(smallCard).append($counterSmall);
+      
+      var $counterBig = $('<div/>');
+      $counterBig.addClass('stackCounter');
+      $counterBig.text('1');
+      
+      $(smallCard).append($counterSmall);
+      $(card).append($counterBig);
+
+      $smallMat.append(smallCard);
+      $largeMat.append(card);
     }
     else {
-        for ( i = 0; i < cards.length; i++ ) {
-          $(cards[i]).css({rotate:90, left:curLeft, top:-30, position:'absolute', 'z-index':startZ++});
-          curLeft+=30;
-        }
+      bigStack = $largeMat.children('._c_' + ctype);
+      
+      num = smallStack.children('.stackCounter').text();
+      
+      smallStack.children('.stackCounter').text(parseInt(num) + 1 + "");
+      bigStack.children('.stackCounter').text(parseInt(num) + 1 + "");
     }
+  }
+  
+  this.newMatCard = function(ctype) {
+    var c = cardData[ctype];
+    var $card = $('<div/>');
+    $card.addClass('smallCard _c_'+ctype);
+    var $img = $('<img/>').attr({
+      src : 'img/' + c.img,
+      width: '100%'
+    });
+    $card.append($img);
+    return $card;
   }
   
   // gain a card in hand given the card id
@@ -236,11 +299,11 @@ function View() {
       revert : function(socketObj) {
         if(socketObj === false)
         {
-          setTimeout(function() {view.spreadHand($('#playerHand').children())}, view.revertAnimationDuration);
+          setTimeout(function() {view.reArrangeHand("player")}, view.revertAnimationDuration);
           return true;
         }
         else {
-          setTimeout(function() {view.spreadHand($('#playerHand').children())});
+          setTimeout(function() {view.reArrangeHand("player")});
           return false;
         }
       },
@@ -249,8 +312,8 @@ function View() {
       stack: '.card',
       opacity: 0.5,
     });
-
-    view.addCardToHand($card);
+    return $card;
+    
   } // end newCard
   
   /****************************************************************/
@@ -259,55 +322,118 @@ function View() {
     //slide in/out left pane function
 	this.SlidePanels = function(container,action, pos){
 	  $outer_container = container;
-		var speed=900;
+	  shrink = $outer_container.children(".shrink");
+	    var speed=900;
 		if (pos == "left" || pos == "right") {
-		  openAnim = {width: 100};
+		  openAnim = {width: 80};
 		  stopAnim = {width: 710};
 		}
-		else if (pos == "top") {
-		  openAnim = {height: 100};
+		else if (pos == "across") {
+		  openAnim = {height: 80};
 		  stopAnim = {height: 710};
+		}
+		else if (pos == "player") {
+  		openAnim = {height: 80};
+		  stopAnim = {height: 500};
 		}
 		else {
   		    return false;
-		}
-		
+		}		
 		var width = $outer_container.width();
 		var easing="easeInOutExpo";
-		if(action=="close"){
+		if(action=="close") {
+		  $outer_container.children('.largeMat').hide();		
+      $outer_container.children('.smallMat').show();		
 			$outer_container.stop().animate(
 			openAnim, 
 			speed,easing, 
 			function() {
-			  $outer_container.css({'background-color':'', 'z-index':1});
+
+     		  $outer_container.css({'z-index':zlayer0});
+	       	$(shrink).css({'z-index':zlayer0+1})
 			});
 		} 
 		else {
-			$outer_container.stop().animate(stopAnim, speed, easing);		
-            $outer_container.css({'background-color':'green', 'z-index':2});
+		    $outer_container.css({'z-index':zlayer3});
+		    $(shrink).css({'z-index':zlayer3});
+			  $outer_container.stop().animate(stopAnim, speed, easing,
+			  function() {
+			    $outer_container.children('.smallMat').hide();
+			    $outer_container.children('.largeMat').show();
+			  } 
+			  );		
 		}
-	}
+	} // end SlidePanels
 
   /****************************************************************/
   /*  Card animations   */
   /****************************************************************/
 
   this.revertAnimationDuration = 500;
+  
+  this.newCardOpponent = function(pos) {
+    var $card = $('<div/>').attr({'class': 'faceDown card'});
+    $('#' + pos + 'Hand').append($card);
+    this.reArrangeHand(pos);
+  }
+
+  this.addCardToHand = function(card) {
+    $('#playerHand').append(card);
+    this.reArrangeHand("player");
+  }
+  
+  this.reArrangeHand = function(pos)
+  {
+    var curTop = 0;
+    var curLeft = 0;
+    if (pos == "tableau")
+      var cards = $('#actionTableau').children(".card");
+    else  
+      var cards = $('#' + pos + 'Hand').children(".card");
+    if (pos == "player" || pos == "tableau") 
+      var startZ = zlayer2;
+    else
+      var startZ = zlayer1;
+    
+    if (pos =="player" || pos == "tableau") {
+        for ( i = 0; i < cards.length; i++ ) {
+          $(cards[i]).css({left:curLeft, top:0, position:'absolute', 'z-index':startZ++});
+          curLeft+=30;
+        }
+    }
+    else if (pos == "left") {
+        for ( i = 0; i < cards.length; i++ ) {
+          $(cards[i]).css({rotate:90, top:curTop, left:-80, position:'absolute', 'z-index':startZ++});
+          curTop+=30;
+        }
+    }
+    else if (pos == "right") {
+        for ( i = 0; i < cards.length; i++ ) {
+          $(cards[i]).css({rotate:-90, top:curTop, right:-80, position:'absolute', 'z-index':startZ++});
+          curTop+=30;
+        }
+    }
+    else if (pos == "across"){
+        for ( i = 0; i < cards.length; i++ ) {
+          $(cards[i]).css({rotate:180, left:curLeft, top:-110, position:'absolute', 'z-index':startZ++});
+          curLeft+=30;
+        }
+    }
+  }
 
   this.addCardToTableau = function(card) {
     card.css({left: 0, top: 0, rotate: 0, position:'relative', x:0, y:0});
-    card.draggable( "disable" );    
+    card.draggable( "disable" );
     $('#actionTableau').append(card);  
     cards = $('#actionTableau').children();
     
     if (cards.length > 3) {
-      this.spreadHand(cards);
+      this.reArrangeHand("tableau");
     }
   }
   
-  this.reArrangeHand = function(cards) {
-    // this.rotateHand(cards);
-    this.spreadHand(cards);
+  this.cleanTableau = function() {
+    $($('#actionTableau').children()).remove('.card');
   }
   
   this.rotateHand = function(cards) {
@@ -340,24 +466,6 @@ function View() {
       }
     }    
   } // end rotateHand
-  
-  this.spreadHand = function(cards) {
-    curLeft = 0;
-    startZ = 1000;
-    
-    for ( i = 0; i < cards.length; i++ ) {
-      $(cards[i]).css({left:curLeft, top:0, position:'absolute', 'z-index':startZ++});
-      curLeft+=30;
-    }
-  } // end spreadHand
-    
-  this.addCardToHand = function(card) {
-    $('#playerHand').append(card);
-    
-    cards = $('#playerHand').children();
-    this.reArrangeHand(cards);
-  }
-  
 } // end class View()
 
 // on load

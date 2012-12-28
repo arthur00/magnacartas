@@ -16,18 +16,40 @@
 <body>
   <div id='gameBoard'>
     <div class='faceDown card' id='playerDeck'></div>
-    <div class='mat' id='playerMat'></div>
+    <div class='mat' id='playerMat'>
+    <div class='smallMat' id='playerSmallMat'></div>
+      <div class='largeMat' id='playerLargeMat'>    
+        <div class='shrink' id='playerShrink'></div>
+      </div>
+    </div>
     <div class='tableau' id='actionTableau'></div>
     <div class='hand' id='playerHand'> </div>
     <div class='faceUp card' id='playerDiscard'></div>
-    <div class='opponent' id='leftOpponent'>
-      <div class='opponentOK' id='leftOppOK'></div>
+    <!-- Left Opponent -->
+    <div class='opponent' id='leftHand'></div>
+    <div class='mat' id='leftMat'>
+      <div class='smallMat' id='leftSmallMat'></div>
+      <div class='largeMat' id='leftLargeMat'>    
+        <div class='shrink' id='leftShrink'></div>
+      </div>
     </div>
-    <div class='opponent' id='rightOpponent'>
-      <div class='opponentOK' id='rightOppOK'></div>    
+
+    <!-- Right Opponent -->
+    <div class='opponent' id='rightHand'></div>
+    <div class='mat' id='rightMat'>
+      <div class='smallMat' id='rightSmallMat'></div>
+      <div class='largeMat' id='rightLargeMat'>    
+        <div class='shrink' id='rightShrink'></div>
+      </div>
     </div>
-    <div class='opponent' id='acrossOpponent'>
-      <div class='opponentOK' id='acrossOppOK'></div>    
+
+    <!-- Across Opponent -->
+    <div class='opponent' id='acrossHand'></div>
+    <div class='mat' id='acrossMat'>
+      <div class='smallMat' id='acrossSmallMat'></div>
+      <div class='largeMat' id='acrossLargeMat'>    
+        <div class='shrink' id='acrossShrink'></div>
+      </div>
     </div>
     <div id='floating'></div>
   </div>
