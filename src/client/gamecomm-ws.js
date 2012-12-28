@@ -23,17 +23,17 @@ function GameCommWebSocket() {
   };
 
   // model callbacks triggered when the socket receives a message
-  rcv_callbacks = {
+  var rcv_callbacks = {
     'welcome' : GAMEMODEL.welcome,
     'playerJoined' : GAMEMODEL.playerJoined,
     'playerLeft' : GAMEMODEL.playerLeft,
     'gameStart' : GAMEMODEL.gameStart,
     'gameOver' : GAMEMODEL.gameOver,
     'endTurn' : GAMEMODEL.endTurn,
-    'setDeck' : GAMEMODEL.setDeck,
-    'drawHand': GAMEMODEL.drawHand,
-    'otherDrawHand': GAMEMODEL.otherDrawHand,
-    'discardHand': GAMEMODEL.discardHand
+    'resetDeck' : GAMEMODEL.someoneResetDeck,
+    'drawCard' : GAMEMODEL.drawCard,
+    'otherDrawCard' : GAMEMODEL.otherDrawCard,
+    'discardFromHand' : GAMEMODEL.someoneDiscardFromHand
   }
 
   // receive handler
@@ -63,6 +63,11 @@ function GameCommWebSocket() {
   // {'endMyTurn': {}}
   this.sendEndMyTurn = function() {
     this.send('endMyTurn', {})
+  }
+
+  // {'playAllMyMoneys': {}}
+  this.sendPlayAllMyMoneys = function() {
+    this.send('playAllMyMoneys', {})
   }
 
   // Convert a message in JSON and send it right away.

@@ -81,44 +81,42 @@ function GameModel(playerId) {
     }
   }
 
-  // args = {'size': 10} for a starting deck of 10 cards
-  this.setDeck = function(args) {
-  }
-
-  // args = {'hand': [card1, card2, ..., card5]}
-  // card1 = {'name' = '', 'cost': 1, 'fame': 0, 'desc': 'Draw 3 cards',
-  // 'qty': 10, 'qtyleft': 6}
-  this.drawHand = function(args) {
-    var cardNames = new Array()
-    var hand = args.hand
-    for ( var i = 0; i < hand.length; i++) {
-      cardNames.push(hand[i].name)
-    }
-    console.log('I draw ' + cardNames.join())
-  }
-
-  // Another player just drew his hand.
-  // This is just a notification from the server.
-  // args = {'player': {'name':'art'}, 'size': 5}
-  this.otherDrawHand = function(args) {
-    var pname = args.player.name
-    var num = args.size
-    console.log(pname + ' draws ' + num + ' cards into his hand')
-  }
-
-  // A player discarded his hand. This player CAN be myself.
-  // args = {'player': {'name': 'arthur'}, 'cards': [card1, card2, ...]}
-  this.discardHand = function(args) {
-    var cardNames = new Array()
-    var cards = args.cards
-    for ( var i = 0; i < cards.length; i++) {
-      cardNames.push(cards[i].name)
-    }
+  // A player's deck runs out and is replaced by his discard.
+  // Also called at game start when setting the initial deck.
+  // args = {'player': {'name': 'arthur'}, 'size': 10}
+  this.someoneResetDeck = function(args) {
     var pname = args.player.name
     if (pname == self.myName) {
-      console.log('I discard ' + cardNames.join())
+      console.log('I shuffle my deck (' + args.size + ' cards)')
     } else {
-      console.log(pname + ' discard ' + cardNames.join())
+      console.log(pname + ' shuffles his deck (' + args.size + ' cards)')
+    }
+  }
+
+  // I draw a card into my hand.
+  // args = {'card': card1}
+  // card1 = {'name' = '', 'cost': 1, 'fame': 0, 'desc': 'Draw 3 cards',
+  // 'qty': 10, 'qtyleft': 6}
+  this.drawCard = function(args) {
+    console.log('I draw ' + args.card.name)
+  }
+
+  // Another player just drew a card into his hand.
+  // This is just a notification from the server.
+  // args = {'player': {'name':'art'}}
+  this.otherDrawCard = function(args) {
+    console.log(args.player.name + ' draws a card')
+  }
+
+  // A player discarded a card from his hand. This player CAN be myself.
+  // args = {'player': {'name': 'arthur'}, 'card': card1}
+  this.someoneDiscardFromHand = function(args) {
+    var pname = args.player.name
+    var cName = args.card.name
+    if (pname == self.myName) {
+      console.log('I discard ' + cName)
+    } else {
+      console.log(pname + ' discard ' + cName)
     }
   }
 
