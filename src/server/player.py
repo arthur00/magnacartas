@@ -117,59 +117,81 @@ class Player():
         self.send('endTurn', data)
 
 
-    def set_deck(self, deck):
-        """ At the beginning of the game, send the length of my deck. """
-        self.deck = deck
-        data = {'size': len(deck)}
-        self.send('setDeck', data)
+    ###########################  hand, deck, and discard pile
 
-
-    def draw_hand(self, num_cards):
-        """ Draw num_cards cards from my deck to my hand.
-        If my deck is empty, shuffle the discard pile, and consider it my deck.
-        If I have less than num_cards in my discard + deck, 
-        then I draw them all.
+    def reset_deck(self, deck=[]):
+        """ Shuffle my discard pile and put it as my deck.  
+        At the beginning of the game, this should be called with a non-empty deck.
+        In any case, return the number of cards in my deck. 
         """
-        
-        for _ in range(num_cards):
-            try:
-                card = self.deck.pop()
-            except IndexError: # empty: replace the deck by the discard pile
-                if len(self.discard) == 0: # not enough cards to draw from
-                    break
-                cards = self.discard[:]
-                self.discard = []
-                shuffle(cards)
-                self.deck = cards
-                card = self.deck.pop()
-            self.hand.append(card)
-        data = {'hand': [card.serialize() for card in self.hand]}
-        self.send('drawHand', data)
-        return len(self.hand)
+        if deck:
+            self.deck = deck
+        else:
+            cards = list(self.discard) # copy
+            self.discard = []
+            shuffle(cards)
+            self.deck = cards
+        # send to me
+        return len(self.deck)
 
 
-    def other_draw_hand(self, player, num_cards):
-        """ Notify me that another player drew his hand """
+
+    def someone_reset_deck(self, player, num_cards):
+        """ Notify me that a player shuffled his deck and emptied his discard pile.
+        This player CAN be me. 
+        """
         data = {'player': player.serialize('name'),
                 'size': num_cards}
-        self.send('otherDrawHand', data)
+        self.send('resetDeck', data)
+
+
+    def draw_card(self):
+        """ Draw a card from my deck into my hand. 
+        If the deck runs out, 
+        tell the game so that all other players know I reshuffle.
+        """
+        try:
+            card = self.deck.pop()
+        except IndexError: # deck is empty: replace by the discard pile
+            if len(self.discard) == 0: # discard is also empty
+                return # dont draw any card
+            self._game.player_reset_deck(self)
+            card = self.deck.pop()
+
+        self.hand.append(card)
+        data = {'card': card.serialize()}
+        self.send('drawCard', data)
+
+
+
+    def other_draw_card(self, player):
+        """ Notify me that another player drew his hand """
+        data = {'player': player.serialize('name')}
+        self.send('otherDrawCard', data)
+
 
 
     def discard_hand(self):
-        """ Shuffle my hand and put in in the discard pile. """
+        """ Put my hand in in the discard pile. Return the discarded cards. """
         hand = self.hand[:] # copy
         self.hand = []
-        shuffle(hand)
         for card in hand:
             self.discard.append(card)
         hand.reverse() # so that the 1st card is the top of the discard pile
         return hand
 
 
-    def someone_discard_hand(self, player, cards):
+    def someone_discard_card_from_hand(self, player, card):
         """ Notify me that a player discarded his hand. 
         This player CAN be myself.
         """
         data = {'player': player.serialize('name'),
-                'cards': [card.serialize() for card in cards]}
-        self.send('discardHand', data)
+                'card': card.serialize()}
+        self.send('discardFromHand', data)
+
+
+    ###############  play all money, buying 
+
+    def on_playAllMyMoneys(self):
+        pass
+
