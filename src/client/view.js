@@ -41,6 +41,24 @@ var isEven = function(someNumber){
     return (someNumber%2 == 0) ? true : false;
 };
 
+function calculateGrid(container,spacing) {
+  var width = container.width();
+  var height = container.height();
+  var cardWidth = $('.card').width();
+  var cardHeight = $('.card').height();
+  
+  var maxY = Math.floor(height / (cardHeight + spacing));
+  var maxX = Math.floor(width / (cardWidth + spacing));
+  var grid = new Array(maxY);
+  for (i = 0; i < maxY; i++) {
+    grid[i] = new Array(maxX);
+    for (j = 0; j < maxX; j++) {
+      grid[i][j] = [spacing + i*(cardHeight+spacing), spacing + j*(cardWidth+spacing)];
+    }
+  }
+  return grid;
+}
+
 
 function View() {
   /****************************************************************/
@@ -52,6 +70,10 @@ function View() {
   var zlayer3 = 3000;
   
   this.init = function() {
+      //buyingGrid = calculateGrid($('largeBuying');
+      $('#buyingClose').hide();
+      $('#largeBuying').hide();
+      
       $('#leftShrink').hide();
       $('#leftShrink').css({rotate:180});
       $('#rightShrink').hide();
@@ -64,6 +86,19 @@ function View() {
       $('#rightLargeMat').hide();
       $('#acrossLargeMat').hide();
       $('#playerLargeMat').hide();
+      
+      $('#buyingBoard').click(
+		  function() { 
+              view.showBuyingBoard("open");
+              $('#buyingClose').show();
+	   });
+	   
+      $('#buyingClose').click(
+      function(e) { 
+          e.stopPropagation();
+          $('#buyingClose').hide();
+          view.showBuyingBoard("close");
+      });
       
       $('#playerMat').click(
 		  function() { //mouse over
@@ -79,13 +114,13 @@ function View() {
 	   });
                   
       $('#leftMat').click(
-		  function() { //mouse over
+		  function() { 
               view.SlidePanels($(this),"open", "left");
               $('#leftShrink').show();
 	   });
 		  
       $('#leftShrink').click(
-		  function(e) { //mouse out
+		  function(e) { 
 		      e.stopPropagation();
 		      $('#leftShrink').hide();
               view.SlidePanels($('#leftMat'),"close", "left");
@@ -93,28 +128,28 @@ function View() {
 	   
 
       $('#rightMat').click(
-		  function() { //mouse over
+		  function() { 
     		  $('#rightShrink').show();
               view.SlidePanels($(this),"open", "right");
 	   });
 	  
 		  
       $('#rightShrink').click(
-		  function(e) { //mouse out
+		  function(e) { 
 		      $('#rightShrink').hide();
 		      e.stopPropagation();
               view.SlidePanels($('#rightMat'),"close", "right");
 	   });
 	   
 	   $('#acrossMat').click(
-		  function() { //mouse over
+		  function() { 
 		      $('#acrossShrink').show();
               view.SlidePanels($(this),"open", "across");
 	   });
 	  
 		  
       $('#acrossShrink').click(
-		  function(e) { //mouse out
+		  function(e) { 
 		      $('#acrossShrink').hide();
 		      e.stopPropagation();
               view.SlidePanels($('#acrossMat'),"close", "across");
@@ -167,6 +202,18 @@ function View() {
     });
   } // End init
   
+  this.disableOtherEvents = function(container) {
+    $('#hiddenLayer').css({'pointer-events':'none'});
+    container.css({'pointer-events':'auto'});
+  }
+  
+  this.enableOtherEvents = function(container) {
+    container.css({'pointer-events':''});
+    $('#hiddenLayer').css({'pointer-events':'auto'});
+    $('#hiddenLayer').unbind('click');
+  }
+
+  
   /****************************************************************/
   /* Card movement */
   /****************************************************************/
@@ -178,8 +225,10 @@ function View() {
   this.moveCardFromHand = function(source, destination, ctype) {
     if (source == "player") 
       var card = $('#' + source + 'Hand ._c_'+ctype).get(0);
-    else
+    else if (source == "left" || source == "right" || source == "across")
       var card = $('#' + source + 'Hand').children().get(0);
+    else // source is a card 
+      var card = source;
     var xstart = $(card).offset().left;
     var ystart = $(card).offset().top;
     var startPoint = [xstart,ystart];
@@ -216,12 +265,81 @@ function View() {
     else {
       return False;
     }
-    this.reArrangeHand(source);
+    if (source == 'left' || source == 'right' || source == 'player' || source == 'across')
+      this.reArrangeHand(source);
   }
   
   /****************************************************************/
   /* Card management */ 
   /****************************************************************/
+  
+  this.generateBuyingPiles = function() {
+    var buyingGrid = calculateGrid($('#largeBuying'), 10);
+    console.log(buyingGrid);
+    this.addBuyingStacks(
+      [ 
+        {'ctype': 'blackBeard', 'num' : 10, 'pos' : buyingGrid[3][6]},
+        {'ctype': 'blackBart', 'num' : 10, 'pos' : buyingGrid[2][2]},
+        {'ctype': 'anneBonny', 'num' : 10, 'pos' : buyingGrid[3][5]}
+      ]
+    );
+  }
+  
+  this.addBuyingStacks = function(stacks) {
+    var $buyingStack = $('#largeBuying');
+    $($buyingStack.children()).remove('.card');
+    for (i = 0; i < stacks.length; i++) {
+      this.addBuyingStack(stacks[i].ctype,stacks[i].num,stacks[i].pos);
+    }
+  }
+  
+  this.addBuyingStack = function(ctype,num, pos) {
+    var $buyingStack = $('#largeBuying');
+    stack = $buyingStack.children('._c_' + ctype);
+
+    if (stack.length == 0) {
+      var $counter = $('<div/>');
+      $counter.addClass('stackCounter');
+      $counter.text("" + num);
+      
+      var $card = this.newCard(ctype);
+      $card.draggable('disable');
+      leftPos = pos[1];
+      topPos = pos[0];
+      $card.css({position: 'absolute', left:leftPos, top:topPos});
+      console.log($card);
+      $card.append($counter);
+      $buyingStack.append($card);
+    }
+    else {
+      num = stack.children('.stackCounter').text();
+      stack.children('.stackCounter').text(parseInt(num) + 1 + "");
+    }
+  }
+  
+  this.buyCard = function(ctype, destination) {
+    var $buyingStack = $('#largeBuying');
+    stack = $buyingStack.children('._c_' + ctype);
+    num = stack.children('.stackCounter').text();
+    // Reduce counter of cards after buying
+    stack.children('.stackCounter').text(parseInt(num) - 1 + "");
+    
+    // Create a new card to be dragged to player hand
+    var $newcard = this.newCard(ctype);
+    $newcard.css({position: 'absolute', 'top':stack.position().top, 'left':stack.position().left, 'z-index':zlayer3+1});
+    $buyingStack.append($newcard);
+    
+    if (destination == "player")
+      this.playerBuyCard(ctype);
+    else {
+      // Code for sending "bad habits/illnesses"
+    }
+  } 
+  
+  this.playerBuyCard = function(ctype) {
+    // Move newly created card to player hand
+    this.moveCardFromHand($newcard,"player",ctype);
+  }
   
   this.addCardToMat = function(ctype,pos) {
     $smallMat = $('#' + pos + 'SmallMat');
@@ -231,7 +349,7 @@ function View() {
     
     if (smallStack.length == 0) {
       smallCard = view.newMatCard(ctype);
-      card = view.newCard(ctype);
+      card = this.newCard(ctype);
 
       var $counterSmall = $('<div/>');
       $counterSmall.addClass('stackCounter');
@@ -317,20 +435,59 @@ function View() {
   } // end newCard
   
   /****************************************************************/
-  /*  Scrolling effect  */
+  /*  Animations effect  */
   /****************************************************************/
+  this.showBuyingBoard = function(action) {
+    var container = $('#buyingBoard');
+    var small = $('#smallBuying');
+    var large = $('#largeBuying');
+    var closeButton = container.children(".close");
+		var easing="easeInOutExpo";
+		var speed=900;
+		
+		var openAnim = { width: 800, height: 730, top: 10, left:112 };
+		var closeAnim = { width: 300, height: 80, top: 160, left:362 };
+		
+    if (action == "open") {
+      this.disableOtherEvents(container);
+      small.hide();		
+      container.css({'z-index':zlayer3});
+      container.stop().animate(
+			openAnim, 
+			speed,easing, 
+			function() {
+ 		      large.show();
+	       	$(closeButton).css({'z-index':zlayer3})
+			});
+    }
+    else if (action == "close") {
+        large.hide();
+        this.enableOtherEvents(container);
+		    $(closeButton).css({'z-index':zlayer0});
+			  container.stop().animate(closeAnim, speed, easing,
+			  function() {
+  			  container.css({'z-index':zlayer0});
+			    small.show(); 
+			  } 
+			  );
+    }
+  } 
+
     //slide in/out left pane function
 	this.SlidePanels = function(container,action, pos){
 	  $outer_container = container;
 	  shrink = $outer_container.children(".shrink");
-	    var speed=900;
+	  var speed=900;
+		var width = $outer_container.width();
+		var easing="easeInOutExpo";
+		
 		if (pos == "left" || pos == "right") {
 		  openAnim = {width: 80};
 		  stopAnim = {width: 710};
 		}
 		else if (pos == "across") {
 		  openAnim = {height: 80};
-		  stopAnim = {height: 710};
+		  stopAnim = {height: 700};
 		}
 		else if (pos == "player") {
   		openAnim = {height: 80};
@@ -339,21 +496,20 @@ function View() {
 		else {
   		    return false;
 		}		
-		var width = $outer_container.width();
-		var easing="easeInOutExpo";
 		if(action=="close") {
+		  this.enableOtherEvents(container);
 		  $outer_container.children('.largeMat').hide();		
       $outer_container.children('.smallMat').show();		
 			$outer_container.stop().animate(
 			openAnim, 
 			speed,easing, 
 			function() {
-
      		  $outer_container.css({'z-index':zlayer0});
 	       	$(shrink).css({'z-index':zlayer0+1})
 			});
 		} 
 		else {
+    		this.disableOtherEvents(container);
 		    $outer_container.css({'z-index':zlayer3});
 		    $(shrink).css({'z-index':zlayer3});
 			  $outer_container.stop().animate(stopAnim, speed, easing,
@@ -419,7 +575,7 @@ function View() {
           curLeft+=30;
         }
     }
-  }
+  } // end reArrangeHand
 
   this.addCardToTableau = function(card) {
     card.css({left: 0, top: 0, rotate: 0, position:'relative', x:0, y:0});
