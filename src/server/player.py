@@ -1,5 +1,11 @@
 from logger import logger
 from random import shuffle
+from server.card import MoneyCard
+
+PHASE_NOTMYTURN = 'notmyturn'
+PHASE_ACTION = 'action'
+PHASE_BUYING = 'buy'
+
 
 
 class Player():
@@ -11,11 +17,17 @@ class Player():
         self._game = game
         self._handler = conn_handler
         conn_handler.set_player(self)
+
         self.name = name
         self.score = 0
         self.deck = []
         self.hand = []
         self.discard = []
+
+        self._phase = PHASE_NOTMYTURN
+        self.coins = 0 # how many coins i have in play, during my buying phase
+        self.buys = 1 # buys during my buying phase
+        self.actions = 1 # actions during my action phase
 
 
     def __repr__(self):
@@ -102,16 +114,34 @@ class Player():
         self.send('gameOver', data)
 
 
+
     def on_endMyTurn(self):
         """ The client says his turn ended. """
-        self._game.end_turn(self)
+        if self._phase is not PHASE_NOTMYTURN:
+            self._game.end_turn(self)
+        else:
+            logger.warn('player %s sent endTurn message out of his turn' % self.name)
 
 
     def end_turn(self, prev_player, next_player):
         """ Notify the client that someone's turn ended, 
         and someone's turn begins.
+        prev_player is None during the first turn of the first player.
+        next_player is None during the last turn.
         """
-        data = {'next': next_player.serialize('name')}
+        if prev_player and self.name == prev_player.name: # end of my turn
+            # reset my actions, coins, and buys
+            self.coins = 0
+            self.actions = 1
+            self.buys = 1
+            self._phase = PHASE_NOTMYTURN
+        if next_player and self.name == next_player.name: # beginning of my turn
+            self._phase = PHASE_ACTION
+
+        # send the information anyway
+        data = {}
+        if next_player:
+            data['next'] = next_player.serialize('name')
         if prev_player:
             data['prev'] = prev_player.serialize('name')
         self.send('endTurn', data)
@@ -135,7 +165,6 @@ class Player():
         return len(self.deck)
 
 
-
     def someone_reset_deck(self, player, num_cards):
         """ Notify me that a player shuffled his deck and emptied his discard pile.
         This player CAN be me. 
@@ -143,6 +172,7 @@ class Player():
         data = {'player': player.serialize('name'),
                 'size': num_cards}
         self.send('resetDeck', data)
+
 
 
     def draw_card(self):
@@ -161,7 +191,6 @@ class Player():
         self.hand.append(card)
         data = {'card': card.serialize()}
         self.send('drawCard', data)
-
 
 
     def other_draw_card(self, player):
@@ -190,8 +219,57 @@ class Player():
         self.send('discardFromHand', data)
 
 
-    ###############  play all money, buying 
+
+    ###############  put down money, buy a card 
+
 
     def on_playAllMyMoneys(self):
-        pass
+        """ Put my money cards in the tableau.  
+        Count and store the amount of money available to me. 
+        """
+        if self._phase == PHASE_ACTION:
+            self._phase = PHASE_BUYING
+            for card in self.hand:
+                if isinstance(card, MoneyCard):
+                    self.coins += card.coin
+                    self._game.player_place_money(self, card)
+        else:
+            logger.warn('player %s sent playAllMyMoney out of action phase' % self.name)
 
+
+    def someone_place_money(self, player, card):
+        """ Notify me that a player placed a money card down to buy stuffs. """
+        data = {'player': player.serialize('name'),
+                'card': card.serialize()}
+        self.send('playMoney', data)
+
+
+
+    def on_buy(self, args):
+        """ Player client tells me he buys ONE card. kwargs = {'name': 'Copper'} """
+        try:
+            card_name = args['name']
+        except KeyError:
+            logger.error('player %s sent a buy message'
+                         + ' but the card name was missing')
+            return
+
+        if self._phase == PHASE_BUYING:
+            if self.buys > 0:
+                self._game.player_buy(self, self.coins, card_name)
+            else: # the client should not have sent a buy
+                logger.warn('player %s sent a buy message' % self.name
+                            + ' but he has only %d buys' % self.buys)
+        else:# the client should not have sent a buy
+            logger.warn('player %s' % self.name
+                        + ' sent a buy message out of his buying phase')
+
+
+    def someone_buy(self, player, card):
+        """ """
+        if player.name == self.name:
+            self.discard.append(card)
+            self.buys -= 1
+        data = {'player': player.serialize('name'),
+                'card': card.serialize()}
+        self.send('buy', data)
