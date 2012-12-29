@@ -22,4 +22,14 @@ $(function() {
   GAMEVIEW = new GameViewJquery();
   GAMECOMM = new GameCommWebSocket();
 
+  $('#endTurnBtn').click(function() {
+    GAMECOMM.sendEndMyTurn()
+  })
+  $('#playTreasuresBtn').click(function() {
+    GAMECOMM.sendPlayAllMyMoneys()
+  })
+  $('#buyCopperBtn').click(function() {
+    GAMECOMM.sendBuy('Copper')
+  })
+  
 });

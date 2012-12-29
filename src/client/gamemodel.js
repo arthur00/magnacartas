@@ -70,15 +70,29 @@ function GameModel(playerId) {
   }
 
   // Someone's turn ended, and the next player's turn starts.
-  // state = {'prev':playerWhoseTurnIsOver, 'next':playerWhoseTurnStarts}
+  // args = {'prev':playerWhoseTurnIsOver, 'next':playerWhoseTurnStarts}
   // !! During the first turn of the first player, there is no prev !!
-  this.endTurn = function(state) {
-    var pname = state.next.name
-    if (pname == self.myName) {
-      console.log('my turn!!')
-    } else {
-      console.log('turn of ' + pname)
+  // ! During the last turn (ie when the last pile is gone), there is no next !
+  this.endTurn = function(args) {
+    var msg = ''
+    if ('prev' in args) {
+      var pname = args.prev.name
+      if (pname == self.myName) {
+        msg += 'End of my turn.'
+      } else {
+        msg += 'End of ' + pname + '\'s turn.'
+      }
     }
+    if ('next' in args) {
+      var pname = args.next.name
+      if (pname == self.myName) {
+        msg += ' Now is my turn.'
+      } else {
+        msg += ' Now is turn of ' + pname
+      }
+    }
+    console.log(msg)
+
   }
 
   // A player's deck runs out and is replaced by his discard.
@@ -90,6 +104,20 @@ function GameModel(playerId) {
       console.log('I shuffle my deck (' + args.size + ' cards)')
     } else {
       console.log(pname + ' shuffles his deck (' + args.size + ' cards)')
+    }
+  }
+
+  // Someone placed a money card down to buy stuffs.
+  // args = {'player': {'name': 'arthur'}, 'card': card1}
+  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
+  this.someonePlayMoney = function(args) {
+    var pname = args.player.name
+    var cname = args.card.name, coin = args.card.coin
+    if (pname == self.myName) {
+      console.log('I play a ' + cname + ' and gain ' + coin + ' coin(s)')
+    } else {
+      console.log(pname + ' plays a ' + cname + ' and gains ' + coin
+          + ' coin(s)')
     }
   }
 
@@ -116,7 +144,23 @@ function GameModel(playerId) {
     if (pname == self.myName) {
       console.log('I discard ' + cName)
     } else {
-      console.log(pname + ' discard ' + cName)
+      console.log(pname + ' discards ' + cName)
+    }
+  }
+
+  // A player just bought a card. CAN be myself.
+  // The card should go on top of the discard.
+  // The quantity left for this card should be decreased by 1.
+  // args = {'player': {'name': 'arthur'}, 'card': card1}
+  this.someoneBuy = function(args) {
+    var pname = args.player.name
+    var cName = args.card.name
+    var qtyLeft = args.card.qtyLeft
+    if (pname == self.myName) {
+      console.log('I buy ' + cName + '. ' + qtyLeft + ' left in the pile.')
+    } else {
+      console.log(pname + ' buys ' + cName + '. ' + qtyLeft
+          + ' left in the pile.')
     }
   }
 
