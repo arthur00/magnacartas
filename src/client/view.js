@@ -70,15 +70,18 @@ function View() {
   var zlayer3 = 3000;
   
   this.init = function() {
-      //buyingGrid = calculateGrid($('largeBuying');
+      // Sets up the grid spaces for placing buy cards in the buying board
+      buyingGrid = calculateGrid($('#largeBuying'), 10);
+
       $('#buyingClose').hide();
       $('#largeBuying').hide();
+      $('#hiddenLayer').hide();
       
       $('#leftShrink').hide();
       $('#leftShrink').css({rotate:180});
       $('#rightShrink').hide();
       $('#acrossShrink').hide();
-      $('#acrossShrink').css({rotate: 90});
+      $('#acrossShrink').css({rotate: -90});
       $('#playerShrink').hide();
       $('#playerShrink').css({rotate: 90});
       
@@ -203,26 +206,40 @@ function View() {
   } // End init
   
   this.disableOtherEvents = function(container) {
-    $('#hiddenLayer').css({'pointer-events':'none'});
+    $('#gameBoard').css({'pointer-events':'none'});
     container.css({'pointer-events':'auto'});
+    this.greyOutOthers();
   }
   
   this.enableOtherEvents = function(container) {
     container.css({'pointer-events':''});
-    $('#hiddenLayer').css({'pointer-events':'auto'});
-    $('#hiddenLayer').unbind('click');
+    $('#gameBoard').css({'pointer-events':'auto'});
+    $('#gameBoard').unbind('click');
+    this.cancelGreyOut();
   }
 
+  this.disableAllEvents = function() {
+    $('#gameBoard').css({'pointer-events':'none'});
+  }
+  
+  this.enableAllEvents = function () {
+    $('#gameBoard').css({'pointer-events':'auto'});
+  }  
+  
+  this.greyOutOthers = function () {
+    $('#hiddenLayer').show();
+  }
+  
+  this.cancelGreyOut = function () {
+    $('#hiddenLayer').hide();
+  }
   
   /****************************************************************/
   /* Card movement */
   /****************************************************************/
-  var leftEndPoint = [50,240];
-  var rightEndPoint = [1024-50,240];
-  var acrossEndPoint = [512,20];
-  var playerEndPoint = [512,640];
   
-  this.moveCardFromHand = function(source, destination, ctype) {
+  // Coordinates comes from game-coordinates.js.  
+  this.moveCardFromHand = function(source, destination, ctype, afterMoveAnimation) {
     if (source == "player") 
       var card = $('#' + source + 'Hand ._c_'+ctype).get(0);
     else if (source == "left" || source == "right" || source == "across")
@@ -233,38 +250,26 @@ function View() {
     var ystart = $(card).offset().top;
     var startPoint = [xstart,ystart];
     $('#floating').append(card);
-    $(card).css({position:'fixed', top:ystart, left:xstart});    
-    if (destination == "left") {
-      $(card).animate({
-        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],leftEndPoint])},
-        1000,
-        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
-      );
-    }
-    else if (destination == "right") {
-      $(card).animate({
-        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],rightEndPoint])},
-        1000,
-        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
-      );
-    }
-    else if (destination == "across") {
-      $(card).animate({
-        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],acrossEndPoint])},
-        1000,
-        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
-      );
-    }
-    else if (destination == "player") {
-      $(card).animate({
-        crSpline: $.crSpline.buildSequence([startPoint, [400,0], [800,200],playerEndPoint])},
-        1000,
-        function() { $(card).hide("explode",500); setTimeout(function() {$(card).remove()},500) }
-      );
-    }
-    else {
-      return False;
-    }
+    $(card).css({position:'fixed', top:ystart, left:xstart});
+    var endPoint = null;
+    if (destination == "left")
+      endPoint = leftEndPoint;
+    else if (destination == "right")
+      endPoint = rightEndPoint;
+    else if (destination == "across")
+      endPoint = acrossEndPoint;
+    else if (destination == "player")
+      endPoint = playerEndPoint;      
+          
+    $(card).animate({
+      crSpline: $.crSpline.buildSequence([startPoint ,endPoint])},
+      500,
+      function() {
+        if (afterMoveAnimation)
+          afterMoveAnimation($(card));
+      }
+    );
+
     if (source == 'left' || source == 'right' || source == 'player' || source == 'across')
       this.reArrangeHand(source);
   }
@@ -274,13 +279,11 @@ function View() {
   /****************************************************************/
   
   this.generateBuyingPiles = function() {
-    var buyingGrid = calculateGrid($('#largeBuying'), 10);
-    console.log(buyingGrid);
     this.addBuyingStacks(
       [ 
-        {'ctype': 'blackBeard', 'num' : 10, 'pos' : buyingGrid[3][6]},
-        {'ctype': 'blackBart', 'num' : 10, 'pos' : buyingGrid[2][2]},
-        {'ctype': 'anneBonny', 'num' : 10, 'pos' : buyingGrid[3][5]}
+        {'ctype': 'blackBeard', 'num' : 10, 'pos' : buyingGrid[0][0]},
+        {'ctype': 'blackBart', 'num' : 10, 'pos' : buyingGrid[0][1]},
+        {'ctype': 'anneBonny', 'num' : 10, 'pos' : buyingGrid[0][2]}
       ]
     );
   }
@@ -307,7 +310,6 @@ function View() {
       leftPos = pos[1];
       topPos = pos[0];
       $card.css({position: 'absolute', left:leftPos, top:topPos});
-      console.log($card);
       $card.append($counter);
       $buyingStack.append($card);
     }
@@ -325,20 +327,22 @@ function View() {
     stack.children('.stackCounter').text(parseInt(num) - 1 + "");
     
     // Create a new card to be dragged to player hand
-    var $newcard = this.newCard(ctype);
-    $newcard.css({position: 'absolute', 'top':stack.position().top, 'left':stack.position().left, 'z-index':zlayer3+1});
-    $buyingStack.append($newcard);
+    var newcard = this.newCard(ctype);
+    $('#largeBuying').append(newcard);
+    console.log(stack.offset());
+    newcard.css({position: 'absolute', 'top':stack.position().top, 'left':stack.position().left, 'z-index':zlayer3+1});
     
-    if (destination == "player")
-      this.playerBuyCard(ctype);
+    if (destination == "player") 
+      this.playerBuyCard(ctype,newcard);
     else {
+      newcard.remove();
       // Code for sending "bad habits/illnesses"
     }
   } 
   
-  this.playerBuyCard = function(ctype) {
+  this.playerBuyCard = function(ctype,newcard) {
     // Move newly created card to player hand
-    this.moveCardFromHand($newcard,"player",ctype);
+    this.moveCardFromHand(newcard,"player",ctype, function(newcard) {view.addCardToHand(newcard);});
   }
   
   this.addCardToMat = function(ctype,pos) {

@@ -28,14 +28,16 @@ img {
   overflow:hidden;
 }
 
-/* Used to absorb clicks outside expanded/slided div */
+/* Used to grey out other divs and to prevent clicking outside */
 #hiddenLayer {
   height:inherit;
   width:inherit;
   top:0;
   left:0;
   position:absolute;
-
+  z-index:2999; /* zlayer3 - 1 */
+  background-color: gray;
+  opacity: 0.5;
 }
 
 .stacktop {
@@ -54,10 +56,18 @@ img {
   border: 3px solid black;
 }
 
-/***************************************/
+/*********************/
 /* cards */
+/*********************/
 
-.cardTemplate,.card,.faceUp,.faceDown,.hand {
+.smallDeck,.smallDiscard {
+  height: 80px;
+  width: 50px;
+  border: 3px solid black;
+  position: absolute;
+}
+
+.cardTemplate,.card,.hand {
   height: 160px;
 } 
   .hand {
@@ -68,7 +78,7 @@ img {
   }
 
   .faceUp {
-    background-color: floralwhite;
+    background-color: lightblue;
   }
 
   .faceDown {
@@ -124,27 +134,6 @@ img {
         text-align: center;
         top:10px;
       }
-
-  #playerHand {
-	  position: absolute;
-	  bottom: 0;
-	  padding: 0px;
-	  /*overflow:auto;*/
-  }
-  
-  #playerDeck {
-    background-color: lightblue;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-  }
-
-  #playerDiscard {
-    background-color: lightblue;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-  }
  
 .smallCard {
   width:70px;
@@ -202,147 +191,231 @@ img {
   background-size: cover;
 }
 
-#leftHand {
-  top: 0px;
-  left: 0px;
-  height:480px;
-  width:50px;
-  z-index: 1;
+
+/***********************/
+/* Player */
+/***********************/
+
+#playerHand {
+	  position: absolute;
+	  bottom: 0;
+	  padding: 0px;
+	  /*overflow:auto;*/
+  }
+  
+  #playerDeck {
+    background-color: lightblue;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+  }
+
+  #playerDiscard {
+    background-color: lightblue;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+
+  #playerMat {
+    height: 80px;
+    width: 700px;
+    position: absolute;
+    left: 162px; /* (1024 - 700)/2 */
+    bottom: 165px;
+  }
+
+    #playerSmallMat {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      height:100%;
+      width:700px;
+      z-index: 1;
+    }
+    
+    #playerSmallMat .smallCard {
+      float:left;
+    }
+    
+    #playerLargeMat {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      height:420px;
+      width:100%; /* same width as the expaning animation in view.js */
+      z-index: 1;
+    }
+
+
+/***********************/
+/* Left Opponent */
+/***********************/
+
+#leftOpponent {
 }
 
-#rightHand {
-  top: 0px;
-  right: 0px;
-  height:480px;
-  width:50px;  
-  z-index: 1;
+  #leftHand {
+    top: 0px;
+    left: 0px;
+    height:480px;
+    width:50px;
+    z-index: 1;
+  }
+
+  #leftDeck {
+    top: 480px;
+    left: 0px;
+    margin:10px;
+  }
+
+  #leftDiscard {
+    top: 480px;
+    left: 60px;
+    margin:10px;
+  }
+
+  #leftMat {
+    top: 0px;
+    left: 55px;
+    height:480px;
+    width:80px;
+    z-index: 1;
+  }
+
+    #leftSmallMat {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      height:100%;
+      width:80px;
+      z-index: 1;
+    }
+    
+    #leftLargeMat {
+      position: absolute;
+      top: 0px;
+      left: 80px;
+      height:100%;
+      width:630px; /* same width as the expaning animation in view.js */
+      z-index: 1;
+    }
+    
+/***********************/
+/* Right Opponent */
+/***********************/    
+
+#rightOpponent {
 }
 
-#acrossHand {
-  top: 0px;
-  left: 272px; /* (1024 - 480)/2 */
-  height:50px;
-  width:480px;
-  z-index: 1;  
+  #rightHand {
+    top: 0px;
+    right: 0px;
+    height:480px;
+    width:50px;  
+    z-index: 1;
+  }
+
+  #rightMat {
+    top: 0px;
+    right: 55px;
+    height:480px;
+    width:80px;  
+    z-index: 1;
+  }
+
+  #rightDeck {
+    top: 480px;
+    right: 0px;
+    margin:10px;
+  }
+
+  #rightDiscard {
+    top: 480px;
+    right: 60px;
+    margin:10px;
+  }
+
+    #rightSmallMat {
+      position: absolute;
+      top: 0px;
+      right: 0px;
+      left: 0px;
+      height:100%;
+      width:80px;
+      z-index: 1;
+    }
+    
+    #rightLargeMat {
+      position: absolute;
+      top: 0px;
+      right: 80px;
+      height:100%;
+      width:630px; /* same width as the expaning animation in view.js */
+      z-index: 1;
+    }
+
+/***********************/
+/* Across Opponent */
+/***********************/
+
+#acrossOpponent {
 }
 
+  #acrossHand {
+    top: 0px;
+    left: 272px; /* (1024 - 480)/2 */
+    height:50px;
+    width:480px;
+    z-index: 1;  
+  }
+  
+  #acrossMat {
+    top: 55px;
+    left: 272px; /* (1024 - 480)/2 */
+    height:80px;
+    width:480px;
+    z-index: 1;  
+  }
+
+  #acrossDeck {
+    top: 0px;
+    left: 762px; /* 272 + 480 + 10 */
+    margin:10px;
+  }
+
+  #acrossDiscard {
+    top: 0px;
+    left: 192px;
+    margin:10px;
+  }
+
+    #acrossSmallMat {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      height:80px;
+      width:480px;
+      z-index: 1;
+    }
+    
+    #acrossSmallMat .smallCard {
+      float:left;
+    }
+    
+    #acrossLargeMat {
+      position: absolute;
+      top: 80px;
+      left: 0px;
+      height:620px;
+      width:480px; /* same width as the expaning animation in view.js */
+      z-index: 1;
+    }
+    
 .smallMat {
   padding: 3px;
 }
 
-#playerMat {
-  height: 80px;
-  width: 700px;
-  position: absolute;
-  left: 162px; /* (1024 - 700)/2 */
-  bottom: 165px;
-}
-
-  #playerSmallMat {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    height:80px;
-    width:700px;
-    z-index: 1;
-  }
-  
-  #playerSmallMat .smallCard {
-    float:left;
-  }
-  
-  #playerLargeMat {
-    position: absolute;
-    top: 0px;
-    left: 80px;
-    height:480px;
-    width:630px; /* same width as the expaning animation in view.js */
-    z-index: 1;
-  }
-
-
-#leftMat {
-  top: 0px;
-  left: 55px;
-  height:480px;
-  width:80px;
-  z-index: 1;
-}
-
-  #leftSmallMat {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    height:480px;
-    width:80px;
-    z-index: 1;
-  }
-  
-  #leftLargeMat {
-    position: absolute;
-    top: 0px;
-    left: 80px;
-    height:480px;
-    width:630px; /* same width as the expaning animation in view.js */
-    z-index: 1;
-  }
-
-#rightMat {
-  top: 0px;
-  right: 55px;
-  height:480px;
-  width:80px;  
-  z-index: 1;
-}
-
-  #rightSmallMat {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    left: 0px;
-    height:480px;
-    width:80px;
-    z-index: 1;
-  }
-  
-  #rightLargeMat {
-    position: absolute;
-    top: 0px;
-    right: 80px;
-    height:480px;
-    width:630px; /* same width as the expaning animation in view.js */
-    z-index: 1;
-  }
-  
-#acrossMat {
-  top: 55px;
-  left: 272px; /* (1024 - 480)/2 */
-  height:80px;
-  width:480px;
-  z-index: 1;  
-}
-
-  #acrossSmallMat {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    height:80px;
-    width:480px;
-    z-index: 1;
-  }
-  
-  #acrossSmallMat .smallCard {
-    float:left;
-  }
-  
-  #acrossLargeMat {
-    position: absolute;
-    top: 80px;
-    left: 0px;
-    height:620px;
-    width:480px; /* same width as the expaning animation in view.js */
-    z-index: 1;
-  }
 
 .tableau {
   padding: 0px;
