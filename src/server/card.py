@@ -56,8 +56,20 @@ class CopperCard(MoneyCard):
     name = 'Copper'
     cost = 1
     coins = 1
-    qty = 50  
+    qty = 50
     
+class SilverCard(MoneyCard):
+    name = 'Silver'
+    cost = 4
+    coins = 2
+    qty = 8
+    
+class GoldCard(MoneyCard):
+    name = 'Gold'
+    cost = 7
+    coins = 3
+    qty = 8  
+
 
 
 
@@ -96,22 +108,30 @@ class CommodoreCard(PirateCard):
     name = 'Commodore'
     cost = 3
     fame = 1
-    qty = 20
+    qty = 30
     briggable = True
     desc = 'Brig for 2 actions'
 
 
+class AdmiralCard(PirateCard):
+    name = 'Admiral'
+    cost = 9
+    fame = 6
+    qty = 8
 
-class SmithyCard(PirateCard):
-    name = 'Smithy'
-    cost = 4
-    fame = 1
+
+
+class CartographerCard(PirateCard):
+    name = 'Cartographer'
+    cost = 7
+    fame = 3
     draws = 3
-    qty = 10
-    desc = 'Draw 3 cards'
+    buys = 1
+    qty = 8
 
     def do_effect(self):
-        self._game.cur_player.drawFromDeck(3)
+        self._game.cur_player.drawcards(3)
+        self._game.cur_player.addbuys(1)        
 
 
 
@@ -120,7 +140,9 @@ class SmithyCard(PirateCard):
 def pick_piles(num):
     """ Return a dictionary {'card.name': card_class} """
     # TODO: should draw piles randomly
-    samplers = [CopperCard, CommodoreCard]
+    samplers = [CopperCard, SilverCard, GoldCard, 
+                CommodoreCard, AdmiralCard,
+                CartographerCard]
     # reset the quantities left
     for card_class in samplers: 
         card_class.qty_left = card_class.qty

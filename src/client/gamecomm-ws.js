@@ -32,8 +32,8 @@ function GameCommWebSocket() {
     'cleanup' : GAMEMODEL.cleanup,
     'endTurn' : GAMEMODEL.endTurn,
     'resetDeck' : GAMEMODEL.someoneResetDeck,
-    'drawCard' : GAMEMODEL.drawCard,
-    'otherDrawCard' : GAMEMODEL.otherDrawCard,
+    'drawCards' : GAMEMODEL.drawCards,
+    'otherDrawCards' : GAMEMODEL.otherDrawCards,
     'playMoney' : GAMEMODEL.someonePlayMoney,
     'buy' : GAMEMODEL.someoneBuy
   }
@@ -78,6 +78,14 @@ function GameCommWebSocket() {
       'name' : cardName
     }
     this.send('buy', args)
+  }
+
+  // {'play': {'name': 'Smithy'}}
+  this.sendPlay = function(cardName) {
+    var args = {
+      'name' : cardName
+    }
+    this.send('play', args)
   }
 
   // Convert a message in JSON and send it right away.

@@ -78,7 +78,7 @@ class Player():
 
 
     ############################  player joined/left 
-    
+
     def welcome(self, table, numplayers):
         """ Send the current configuration of the table. 
         The game has not started yet. 
@@ -91,7 +91,7 @@ class Player():
 
 
 
-    def player_joined(self, table, new_player):
+    def ntf_playerjoined(self, table, new_player):
         """ Notify the client that another player joined. """
         data = {'table': [player.serialize('name') for player in table],
                 'newPlayer': new_player.serialize('name')
@@ -100,7 +100,7 @@ class Player():
 
 
 
-    def player_left(self, table, old_player):
+    def ntf_playerleft(self, table, old_player):
         """ Notify the client that another player left. """
         data = {'table': [player.serialize('name') for player in table],
                 'oldPlayer': old_player.serialize('name')
@@ -110,8 +110,8 @@ class Player():
 
 
     ########################  game start/end
-    
-    def game_start(self, table, piles, start_player):
+
+    def ntf_gamestart(self, table, piles, start_player):
         """ Notify the client of the beginning of the game """
         data = {'table': [p.serialize('name') for p in table],
                 'piles': [card.serialize() for card in piles],
@@ -121,7 +121,7 @@ class Player():
 
 
 
-    def game_over(self, table, winner):
+    def ntf_gameover(self, table, winner):
         """ This player has won! """
         data = {'table': [player.serialize('name', 'score') for player in table],
                 'winner': winner.serialize('name', 'score')
@@ -131,7 +131,7 @@ class Player():
 
 
     ########################## cleanup, next turn
-    
+
     def on_endMyTurn(self):
         """ The client says his turn ended. 
         Move cards in the tableau and hand to the discard.
@@ -194,9 +194,9 @@ class Player():
 
 
 
-    ###########################  hand, deck, discard
+    ###########################  draw, discard, hand, deck, buys, actions, coins 
 
-    def reset_deck(self, deck=[]):
+    def resetdeck(self, deck=[]):
         """ Shuffle my discard pile and put it as my deck.  
         At the beginning of the game, this should be called with a non-empty deck.
         In any case, return the number of cards in my deck. 
@@ -208,7 +208,7 @@ class Player():
             self.discard = []
             shuffle(cards)
             self.deck = cards
-        return len(self.deck)
+        self._game.player_resetdeck(self, len(self.deck))
 
 
 
@@ -222,30 +222,61 @@ class Player():
 
 
 
-    def draw_card(self):
-        """ Draw a card from my deck into my hand. 
+    def drawcards(self, num_cards):
+        """ Draw n cards from my deck into my hand. 
         If the deck runs out, 
         tell the game so that all other players know I reshuffle.
+        Send draws in batches. For example, if my deck has 2 cards left,
+        my discard has 10 cards left, and I need to draw 5 cards,
+        then I send a batch of 2, then a deck reset, and finally a batch of 3. 
         """
-        try:
-            card = self.deck.pop()
-        except IndexError: # deck is empty: replace by the discard pile
-            if len(self.discard) == 0: # discard is also empty
-                return # dont draw any card
-            self._game.player_resetdeck(self)
-            card = self.deck.pop()
+        remaining = num_cards
+        batch_cards = [] # cards drawn from the deck until the deck resets
+        while remaining > 0:
+            if len(self.deck) > 0:
+                card = self.deck.pop()
+            else: # deck is empty
+                # send non-empty batch of cards
+                if len(batch_cards) > 0:
+                    data = {'cards': [card.serialize() for card in batch_cards]}
+                    self.send('drawCards', data)
+                    self._game.player_draw(self, len(batch_cards))
+                    batch_cards = []
+                # replace deck by discard pile
+                if len(self.discard) == 0: # discard is also empty
+                    return # dont draw any card
+                self.resetdeck(self)
+                card = self.deck.pop()
+            # add card to hand anyway
+            self.hand.append(card)
+            batch_cards.append(card)
+            remaining -= 1
+        # send last batch (it is not empty)
+        data = {'cards': [card.serialize() for card in batch_cards]}
+        self.send('drawCards', data)
+        self._game.player_draw(self, len(batch_cards))
 
-        self.hand.append(card)
-        data = {'card': card.serialize()}
-        self.send('drawCard', data)
 
 
-
-    def other_draw_card(self, player):
+    def ntf_drawcards(self, player, numcards):
         """ Notify me that another player drew his hand """
-        data = {'player': player.serialize('name')}
-        self.send('otherDrawCard', data)
+        data = {'player': player.serialize('name'),
+                'qty': numcards}
+        self.send('otherDrawCards', data)
 
+
+
+    def addbuys(self, num):
+        """ Notify the game that I gained extra +buys. """
+        self.buys += num
+        self._game.player_addbuys(self, num, self.buys)
+
+
+    def ntf_addbuys(self, player, deltabuys, totalbuys):
+        """ Notify me that a player (can be myself) gained +buys """
+        data = {'player': player.serialize('name'),
+                'deltabuys': deltabuys,
+                'totalbuys': totalbuys}
 
 
     ###############  put down money, buy a card 
@@ -275,23 +306,12 @@ class Player():
 
     def on_buy(self, args):
         """ Player client tells me he buys ONE card. args = {'name': 'Copper'} """
-        try:
+        if self._phase is PHASE_BUYING and self.buys > 0 and 'name' in args:
             card_name = args['name']
-        except KeyError:
-            logger.error('player %s sent a buy message'
-                         + ' but the card name was missing')
-            return
-
-        if self._phase == PHASE_BUYING:
-            if self.buys > 0:
-                self._game.player_buy(self, self.coins, card_name)
-            else: # the client should not have sent a buy
-                logger.warn('player %s sent a buy message' % self.name
-                            + ' but he has only %d buys' % self.buys)
-        else:# the client should not have sent a buy
-            logger.warn('player %s' % self.name
-                        + ' sent a buy message out of his buying phase')
-
+            self._game.player_buy(self, self.coins, card_name)
+        else:
+            logger.error('Player %s asked to buy,' % self.name
+                         + ' but he is not allowed to, or the name is missing.')
 
 
     def ntf_buy(self, player, card):
@@ -302,4 +322,33 @@ class Player():
         data = {'player': player.serialize('name'),
                 'card': card.serialize()}
         self.send('buy', data)
+
+
+
+    #######################  play a card
+
+    def on_play(self, args):
+        """ Client plays a card. Check it's player's turn.
+        Check that he has actions left, and that the card is in his hand. 
+        Then execute the card.
+        args = {'name': 'Smithy'}
+        """
+        if self._phase is PHASE_ACTION and self.actions > 0 and 'name' in args:
+            card_name = args['name']
+            in_hand = False
+            for handcard in self.hand:
+                if handcard.name == card_name:
+                    in_hand = True
+                    break
+            if in_hand:
+                self.actions -= 1
+                handcard.do_effect()
+            else: # no such card in hand
+                logger.error('Player %s wants to play card %s' % (self.name, card_name)
+                             + ' but he does not have this card in hand.')
+        else:
+            logger.error('Player %s wants to play a card' % self.name
+                         + ' but he is not allowed to, or the name is missing.')
+
+
 

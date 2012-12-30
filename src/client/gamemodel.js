@@ -101,6 +101,7 @@ function GameModel(playerId) {
         msg += ' Now is turn of ' + pname
       }
     }
+    console.log('-------------------------')
     console.log(msg)
 
   }
@@ -132,18 +133,22 @@ function GameModel(playerId) {
   }
 
   // I draw a card into my hand.
-  // args = {'card': card1}
+  // args = {'cards': [card1, card2]}
   // card1 = {'name' = '', 'cost': 1, 'fame': 0, 'desc': 'Draw 3 cards',
   // 'qty': 10, 'qtyleft': 6}
-  this.drawCard = function(args) {
-    console.log('I draw ' + args.card.name)
+  this.drawCards = function(args) {
+    var cardNames = new Array()
+    for ( var i =0; i< args.cards.length; i++) {
+      cardNames.push(args.cards[i].name)
+    }
+    console.log('I draw ' + cardNames.join())
   }
 
-  // Another player just drew a card into his hand.
+  // Another player just drew N cards into his hand.
   // This is just a notification from the server.
-  // args = {'player': {'name':'art'}}
-  this.otherDrawCard = function(args) {
-    console.log(args.player.name + ' draws a card')
+  // args = {'player': {'name':'art'}, 'qty': 3}
+  this.otherDrawCards = function(args) {
+    console.log(args.player.name + ' draws ' + args.qty + ' cards.')
   }
 
   // A player just bought a card. CAN be myself.
