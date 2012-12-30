@@ -185,6 +185,7 @@ function View() {
     $('#playerDiscard').droppable({
       drop : function(event, ui) {
         $(this).effect('highlight');
+        $($(this).children()).remove();
         $(this).append(ui.draggable);
         ui.draggable.css({
           position: 'absolute',
@@ -238,29 +239,149 @@ function View() {
   /* Card movement */
   /****************************************************************/
   
-  // Coordinates comes from game-coordinates.js.  
+  // Coordinates comes from game-coordinates.js.
+  // Source: tuple [source player, area]. E.g. ["player","hand"], ["left","mat"], ["right","discard"].
+  //         if card is the source:  ["card",card]
   this.moveCardFromHand = function(source, destination, ctype, afterMoveAnimation) {
-    if (source == "player") 
-      var card = $('#' + source + 'Hand ._c_'+ctype).get(0);
-    else if (source == "left" || source == "right" || source == "across")
-      var card = $('#' + source + 'Hand').children().get(0);
-    else // source is a card 
-      var card = source;
-    var xstart = $(card).offset().left;
-    var ystart = $(card).offset().top;
-    var startPoint = [xstart,ystart];
-    $('#floating').append(card);
-    $(card).css({position:'fixed', top:ystart, left:xstart});
-    var endPoint = null;
-    if (destination == "left")
-      endPoint = leftEndPoint;
-    else if (destination == "right")
-      endPoint = rightEndPoint;
-    else if (destination == "across")
-      endPoint = acrossEndPoint;
-    else if (destination == "player")
-      endPoint = playerEndPoint;      
+    startPoint = coordinates[source]
+    var animEasing="easeInOutExpo";
+		var speed=900;
+    
+    var card = null;
+    var startPoint = null;
+    // If source is a card, no need to create one to move.
+    if (source[0] == "card") {
+        card = source[1];
+    }
+    else {
+      startPoint = coordinates[source[0]][source[1]];
+      // Am I moving a card from someone's hand? If so, actually remove it from the player's hand. 
+      if (source[1] == "hand") {
+        if (source[0] == "player")
+            card = $('#playerHand ._c_'+ctype).get(0);
+        else if (source[0] == "left" || source[0] == "right" || source[0] == "across")
+            card = $('#' + source[0] + 'Hand').children().get(0);
+            if (ctype) {
+              startPoint = [$(card).offset().left, $(card).offset().top];
+              $(card).remove();
+              card = view.newCard(ctype);
+            }
+      }
+      
+      // Moving from a player's mat. Tricky, since I need to remove the card from his mat.
+      else if (source[1] == "mat") {
+        throw "Mat as a source not yet supported."
+      }
+      
+      // Moving from a player's deck. Common case of drawing for example
+      else if (source[1] == "deck") {
+        if (source[0] == "player") {
+          //TODO: allow face up.
+          card = this.newFacedownCard("normal");
+        }
+        else { /* left, across, right */
+          card = this.newFacedownCard("small");
+        }
+      }
+      // Moving from a player's discard
+      else if (source[1] == "discard") {
+        throw "Discard as a source not yet supported."
+        // TBD: Do we need this ever? Except when reshuffling, but that should be separate..      
+      }
+    }
+    
+    // Use the created card and send it to the destination
+    if (!startPoint) {
+      var xstart = $(card).offset().left;
+      var ystart = $(card).offset().top;
+      var startPoint = [xstart,ystart];
+    }
+
+    // Move div outside of current parent to the "floating" parent
+    $('#floating').append(card);    
+    // Set the starting position in a fixed scale
+    $(card).css({position:'fixed', left:startPoint[0], top:startPoint[1]});
+    // Set it back to absolute (which in floating == fixed), to allow for overflow:hidden
+    $(card).css({position:'absolute', 'z-index':zlayer3+1});
+    
+    var endPoint = coordinates[destination[0]][destination[1]];
+    var moveAnimation =  {left: endPoint[0], top: endPoint[1]}
+    var stepAnim = null;
+    // afterMoveAnimation is used to customize behavior after moving. If not specified,
+    // default behavior kicks in, adding card to hand, mat, deck, or discard.
+    if (!afterMoveAnimation) {
+      if (destination[1] == "mat") {
+        afterMoveAnimation = function(_card_) {
+          _card_.remove();
+          view.addCardToMat(ctype,destination[0]);
+        }
+      }
+      // Add card to hand of the destination player
+      else if (destination[1] == "hand") {
+        if (destination[0] == "player") {
+          afterMoveAnimation = function(_card_) {
+            _card_.remove();
+            view.addCardToHand(view.newCard(ctype));
+          }
+        }
+        else {
+          afterMoveAnimation = function(_card_) {
+            view.newCardOpponent(destination[0]);
+            _card_.remove();
+          }
+        }
+      }
+      else if (destination[1] == "deck" || destination[1] == "discard") {
+        if (destination[0] == "player") {
+        }
+        // Shrink to opponent's deck size.
+        else {
+          moveAnimation['width'] = $('#'+destination[0]+'Deck').width();
+          moveAnimation['height'] = $('#'+destination[0]+'Deck').height();
           
+          var cardSize = $('.card').height();
+          var nameFontSize = parseInt($('.card>.name').css('font-size'));
+          var effectFontSize = parseInt($('.card>.effect').css('font-size'));
+          var costFontSize = parseInt($('.card>.cost').css('font-size'));
+          
+          stepAnim = function(now,fx) {
+            if (fx.prop == "height") {
+              p = fx.now / cardSize;
+              fn = Math.round(p*nameFontSize);
+              fe = Math.round(p*effectFontSize);
+              fc = Math.round(p*costFontSize);
+              
+              $name = $(this).children('.card>.name');
+              $effect = $(this).children('.card>.effect');
+              $cost = $(this).children('.card>.cost');
+              
+              $name.css({'font-size':fn+"px"});
+              $effect.css({'font-size':fe+"px"});
+              $cost.css({'font-size':fc+"px"});
+            }
+          }
+        }
+        
+        if (destination[1] == "deck") {
+          afterMoveAnimation = function(_card_) {
+              _card_.remove();
+          }  
+        }
+        else if (destination[1] == "discard") {
+            afterMoveAnimation = function(_card_) {
+              view.addCardToDiscard(_card_,destination[0]);
+          }          
+        }
+      }
+      else if (destination[1] == "buying") {
+        afterMoveAnimation = function(_card_) {
+          view.addBuyingStack(ctype,1);
+          _card_.remove();
+        }
+      }
+    }
+    
+    /*
     $(card).animate({
       crSpline: $.crSpline.buildSequence([startPoint ,endPoint])},
       500,
@@ -269,9 +390,28 @@ function View() {
           afterMoveAnimation($(card));
       }
     );
+    */
+    
+    
+    $(card).animate(moveAnimation, 
+        {
+          duration: speed, 
+          easing: animEasing,
+			    complete: function() {
+            if (afterMoveAnimation) {
+              $(card).css({'z-index':0});
+              afterMoveAnimation($(card));
+            }
+          },
+          step: stepAnim
+        });
 
-    if (source == 'left' || source == 'right' || source == 'player' || source == 'across')
-      this.reArrangeHand(source);
+      
+    
+    
+    // Reorganize hand of player, if card came from someone's hand.
+    if (source[1] == "hand")
+      this.reArrangeHand(source[0]);
   }
   
   /****************************************************************/
@@ -299,7 +439,7 @@ function View() {
   this.addBuyingStack = function(ctype,num, pos) {
     var $buyingStack = $('#largeBuying');
     stack = $buyingStack.children('._c_' + ctype);
-
+    console.log("sending to buying stack");
     if (stack.length == 0) {
       var $counter = $('<div/>');
       $counter.addClass('stackCounter');
@@ -314,8 +454,8 @@ function View() {
       $buyingStack.append($card);
     }
     else {
-      num = stack.children('.stackCounter').text();
-      stack.children('.stackCounter').text(parseInt(num) + 1 + "");
+      cur = stack.children('.stackCounter').text();
+      stack.children('.stackCounter').text(parseInt(cur) + num + "");
     }
   }
   
@@ -391,6 +531,25 @@ function View() {
     });
     $card.append($img);
     return $card;
+  }
+  
+  this.newFacedownCard = function(size) {
+    if (!size)
+      size = "normal";
+    
+    var card = null;
+    
+    if (size == "normal") {    
+      card = $('<div/>').attr({
+        'class' : 'card faceDown'
+      })
+    }
+    else if (size == "small") {
+      card = $('<div/>').attr({
+        'class' : 'smallDeck faceDown'
+      })      
+    }
+    return card;
   }
   
   // gain a card in hand given the card id
@@ -590,6 +749,12 @@ function View() {
     if (cards.length > 3) {
       this.reArrangeHand("tableau");
     }
+  }
+  
+  this.addCardToDiscard = function(card,pos) {
+    $($('#'+pos+'Discard').children()).remove();
+    card.css({top:-3,left:-3});
+    $('#'+pos+'Discard').append(card);
   }
   
   this.cleanTableau = function() {

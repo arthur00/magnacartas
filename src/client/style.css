@@ -17,6 +17,7 @@ img {
 	width: 1024px;
 	position: relative;
 	background-image:url('img/watercolor_bg.jpg');
+/*  background-color: #116611;*/
 	background-repeat:no-repeat;
 	background-size:cover;
 	border-radius: 10px;
@@ -26,6 +27,10 @@ img {
   -webkit-user-select: none;
   user-select: none;
   overflow:hidden;
+}
+
+#floating {
+  overflow: hidden;
 }
 
 /* Used to grey out other divs and to prevent clicking outside */
@@ -50,35 +55,36 @@ img {
 }
 
 .mat {
-  background-color: blue;
+  background-color: rgba(60,40,30,0.8);
+  background-image:
   position: absolute;
-  border-radius: 10px;
-  border: 3px solid black;
+  border-radius: 15px;
+  border: 2px solid rgb(30,20,15);
 }
 
 /*********************/
 /* cards */
 /*********************/
 
-.smallDeck,.smallDiscard {
+.smallDeck,.smallDiscard{
   height: 80px;
   width: 50px;
-  border: 3px solid black;
+  border-radius: 4px;
   position: absolute;
 }
-
-.cardTemplate,.card,.hand {
+.smallDeck {
+  border: 1px solid black;
+}
+.smallDiscard {
+  border: 1px dashed black;
+}
+  
+  
+.cardTemplate,.card,.cardSized,#playerHand {
   height: 160px;
 } 
-  .hand {
-    left: 162px; /* (1024 - 700)/2 */
-    width:700px;
-    border: 3px solid black;
-	  border-radius: 10px;
-  }
-
   .faceUp {
-    background-color: lightblue;
+    background-color: rgba(111,111,111,0.3);
   }
 
   .faceDown {
@@ -87,18 +93,21 @@ img {
     background-size:100% 100%;
   }
 
-  .card {
+  .card, .cardSized {
     width: 100px;
-	  float:left;
-	  border-radius: 10px;
-    border: 3px solid black;
+    border-radius: 10px;
+  }
+  
+  .card {
+    float:left;
+    border: 2px solid black;
     background-color: dimgray;
     -moz-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     user-select: none;
-
   }
+  
       .card>img {
         width: 80%;
         height: 50%;
@@ -138,9 +147,9 @@ img {
 .smallCard {
   width:70px;
   height:70px;
-  border:'4px solid black';
   overflow: hidden;
-  margin: 2px;
+  border: 2px solid black;
+  margin: 3px;
   position: relative;
 }
 
@@ -160,11 +169,11 @@ img {
   border-radius: 12px;
 }
   
-.opponent{
+.handArea{
   border-radius: 10px;
-  border: 3px solid black;
+  border: 1px solid lightyellow;
   position: absolute;
-  background-color: green;
+  background-color: rgba(255,255,255,0.3);
 }
 
 .shrink {
@@ -200,23 +209,29 @@ img {
 	  position: absolute;
 	  bottom: 0;
 	  padding: 0px;
+    left: 162px; /* (1024 - 700)/2 */
+    width:700px;
 	  /*overflow:auto;*/
   }
   
   #playerDeck {
-    background-color: lightblue;
     position: absolute;
     left: 0;
     bottom: 0;
   }
 
   #playerDiscard {
-    background-color: lightblue;
+    border: 2px dashed black;
     position: absolute;
     right: 0;
     bottom: 0;
   }
 
+  /* this margin should equal the border of #playerDiscard*/
+  #playerDiscard .card {
+    margin: -2px;
+    }
+  
   #playerMat {
     height: 80px;
     width: 700px;
@@ -227,6 +242,7 @@ img {
 
     #playerSmallMat {
       position: absolute;
+      padding-left: 5px;
       top: 0px;
       left: 0px;
       height:100%;
@@ -285,6 +301,7 @@ img {
 
     #leftSmallMat {
       position: absolute;
+      padding-top: 5px;
       top: 0px;
       left: 0px;
       height:100%;
@@ -338,6 +355,7 @@ img {
 
     #rightSmallMat {
       position: absolute;
+      padding-top: 5px;
       top: 0px;
       right: 0px;
       left: 0px;
@@ -392,6 +410,7 @@ img {
 
     #acrossSmallMat {
       position: absolute;
+      padding-left: 5px;
       top: 0px;
       left: 0px;
       height:80px;
@@ -413,7 +432,7 @@ img {
     }
     
 .smallMat {
-  padding: 3px;
+/*  padding: 3px;*/
 }
 
 
@@ -435,8 +454,8 @@ img {
 }
   
 #buyingBoard {
-  background-color: cornflowerblue;
-  border: 3px solid black;
+  background-color: rgba(30,30,40,0.85);
+  border: 3px solid rgba(60,40,30,0.7);
   border-radius: 10px;
   left: 362px; /* (1024 - 600)/2 */
   top: 160px;  
@@ -463,7 +482,4 @@ img {
     position: absolute;
   }
   
-/********************/
-/* Sliding menu */
-
 
