@@ -103,7 +103,6 @@ class PirateCard(Card):
         pass
 
 
-
 class CommodoreCard(PirateCard):
     name = 'Commodore'
     cost = 3
@@ -130,6 +129,7 @@ class CartographerCard(PirateCard):
     qty = 8
 
     def do_effect(self):
+        # TODO: the game should notify other players that I played this card
         self._game.cur_player.drawcards(3)
         self._game.cur_player.addbuys(1)        
 
@@ -139,7 +139,7 @@ class CartographerCard(PirateCard):
 
 def pick_piles(num):
     """ Return a dictionary {'card.name': card_class} """
-    # TODO: should draw piles randomly
+    # TODO: should draw action pirate piles randomly
     samplers = [CopperCard, SilverCard, GoldCard, 
                 CommodoreCard, AdmiralCard,
                 CartographerCard]

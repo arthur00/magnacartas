@@ -117,7 +117,7 @@ class PirateGame():
             deck = [CopperCard(self) for _ in range(7)]
             deck += [CartographerCard(self) for _ in range(3)]
             random.shuffle(deck)
-            num_cards = player.reset_deck(deck)
+            num_cards = player.resetdeck(deck)
             [p.ntf_resetdeck(player, num_cards) for p in self.table]
             player.drawcards(5)
 
@@ -148,7 +148,7 @@ class PirateGame():
         """ A player's turn ended. Tell everyone, and start next player's turn. 
         """
         if player != self.cur_player: # not the current player: cheater?
-            logger.warn('player %s tried to end his turn,' % player.name +
+            logger.error('player %s tried to end his turn,' % player.name + 
                         'but it was the turn of %s' % self.cur_player.name)
             return
 
@@ -196,9 +196,9 @@ class PirateGame():
 
 
 
-    def player_playmoney(self, player, card):
+    def player_playmoney(self, player, moneycards):
         """ A player plays a money card to buy stuffs. Notify everyone. """
-        [p.ntf_playmoney(player, card) for p in self.table]
+        [p.ntf_playmoney(player, moneycards) for p in self.table]
 
 
 
@@ -214,12 +214,12 @@ class PirateGame():
                 [p.ntf_buy(player, card) for p in self.table]
 
             else:# the client should not have sent a buy for that card
-                logger.warn('player %s' % player.name
+                logger.error('player %s' % player.name
                             + ' wants to buy a %s' % card_class.name
                             + ' but there are %d left in the pile' % card_class.qty_left)
 
         else: # the client should not have sent a buy for that card
-            logger.warn('player %s' % player.name
+            logger.error('player %s' % player.name
                         + ' wants to buy card %s' % card_class.name
                         + ' but he has only %d coins' % coins)
 
