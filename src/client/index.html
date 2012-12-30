@@ -9,57 +9,70 @@
 <script src="lib/jquery.crSpline.js"></script>
 <script src="lib/jquery.transit.js"></script>
 <script src="lib/jquery.easing.1.3.js"></script>
+<script src="game-coordinates.js"></script>
 <script src="model.js"></script>
 <script src="view.js"></script>
 
 </head>
 <body>
   <div id='gameBoard'>
-    <div id='hiddenLayer'>
-      <div class='faceDown card' id='playerDeck'></div>
-      <div class='mat' id='playerMat'>
-      <div class='smallMat' id='playerSmallMat'></div>
-        <div class='largeMat' id='playerLargeMat'>    
-          <div class='shrink' id='playerShrink'></div>
-        </div>
+    <div id='hiddenLayer'> </div>
+    <div class='faceDown card' id='playerDeck'></div>
+    <div class='mat' id='playerMat'>
+    <div class='smallMat' id='playerSmallMat'></div>
+      <div class='largeMat' id='playerLargeMat'>    
+        <div class='shrink' id='playerShrink'></div>
       </div>
-      <div class='tableau' id='actionTableau'></div>
-      <div id='buyingBoard'>
-        <div id='smallBuying'></div>
-        <div id='largeBuying'>
-          <div class='close' id='buyingClose'></div>
-        </div>
+    </div>
+    <div class='tableau' id='actionTableau'></div>
+    <div id='buyingBoard'>
+      <div id='smallBuying'></div>
+      <div id='largeBuying'>
+        <div class='close' id='buyingClose'></div>
       </div>
-      <div class='hand' id='playerHand'> </div>
-      <div class='faceUp card' id='playerDiscard'></div>
-      <!-- Left Opponent -->
+    </div>
+    <div class='hand' id='playerHand'> </div>
+    <div class='faceUp card' id='playerDiscard'></div>
+    
+    <!-- Left Opponent -->
+    <div id='leftOpponent'>
       <div class='opponent' id='leftHand'></div>
+      <div class='smallDiscard faceUp' id='leftDiscard'></div>
+      <div class='smallDeck faceDown' id='leftDeck'></div>
       <div class='mat' id='leftMat'>
         <div class='smallMat' id='leftSmallMat'></div>
         <div class='largeMat' id='leftLargeMat'>    
           <div class='shrink' id='leftShrink'></div>
         </div>
       </div>
+    </div>
 
-      <!-- Right Opponent -->
+    <!-- Right Opponent -->
+    <div id='rightOpponent'>
       <div class='opponent' id='rightHand'></div>
+      <div class='smallDiscard faceUp' id='rightDiscard'></div>
+      <div class='smallDeck faceDown' id='rightDeck'></div>
       <div class='mat' id='rightMat'>
         <div class='smallMat' id='rightSmallMat'></div>
         <div class='largeMat' id='rightLargeMat'>    
           <div class='shrink' id='rightShrink'></div>
         </div>
       </div>
+    </div>
 
-      <!-- Across Opponent -->
+    <!-- Across Opponent -->
+    <div id='acrossOpponent'>
       <div class='opponent' id='acrossHand'></div>
+      <div class='smallDiscard faceUp' id='acrossDiscard'></div>
+      <div class='smallDeck faceDown' id='acrossDeck'></div>
       <div class='mat' id='acrossMat'>
         <div class='smallMat' id='acrossSmallMat'></div>
         <div class='largeMat' id='acrossLargeMat'>    
           <div class='shrink' id='acrossShrink'></div>
         </div>
       </div>
-      <div id='floating'></div>
-    </div> <!-- hidden layer -->
+    </div>
+    <div id='floating'></div>
   </div> <!-- game board -->
 </body>
 </html>
