@@ -59,7 +59,6 @@ class ClientHandler(WebSocketHandler):
                     else: # no args passed
                         getattr(self._player, 'on_' + cmd)()
                 except AttributeError,e:
-                    logger.error('No such callback: ' + 'on_' + cmd)
                     logger.error(e)
 
 

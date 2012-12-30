@@ -58,15 +58,25 @@ function GameModel(playerId) {
   }
 
   // Game is over.
-  // state = {'table': aTable, 'winner': aPlayer}
-  this.gameOver = function(state) {
-    var winner = state.winner
+  // args = {'table': aTable, 'winner': aPlayer}
+  this.gameOver = function(args) {
+    var winner = args.winner
     console.log(winner.name + ' won with ' + winner.score + ' points')
   }
 
-  // I clicked on "end turn"
-  this.endMyTurn = function() {
-    GAMECOMM.sendEndMyTurn()
+  // The cleanup phase of a player starts.
+  // args = {'player': {'name':'arthur'}, 'top':card1, 'num':6}
+  // card1 = {'name': 'Copper', ...}
+  // if Arthur's clean up phase results in discarding 6 cards
+  // (from tableau + hand), and the top card of his discard pile is a Copper
+  this.cleanup = function(args) {
+    var pname = args.player.name
+    if (pname == self.myName) {
+      console.log('I discard ' + args.num + ' cards. Top: ' + args.top.name)
+    } else {
+      console.log(pname + ' discards ' + args.num + ' cards. Top: '
+          + args.top.name)
+    }
   }
 
   // Someone's turn ended, and the next player's turn starts.
@@ -112,11 +122,11 @@ function GameModel(playerId) {
   // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
   this.someonePlayMoney = function(args) {
     var pname = args.player.name
-    var cname = args.card.name, coin = args.card.coin
+    var cname = args.card.name, coins = args.card.coins
     if (pname == self.myName) {
-      console.log('I play a ' + cname + ' and gain ' + coin + ' coin(s)')
+      console.log('I play a ' + cname + ' and gain ' + coins + ' coin(s)')
     } else {
-      console.log(pname + ' plays a ' + cname + ' and gains ' + coin
+      console.log(pname + ' plays a ' + cname + ' and gains ' + coins
           + ' coin(s)')
     }
   }
@@ -134,18 +144,6 @@ function GameModel(playerId) {
   // args = {'player': {'name':'art'}}
   this.otherDrawCard = function(args) {
     console.log(args.player.name + ' draws a card')
-  }
-
-  // A player discarded a card from his hand. This player CAN be myself.
-  // args = {'player': {'name': 'arthur'}, 'card': card1}
-  this.someoneDiscardFromHand = function(args) {
-    var pname = args.player.name
-    var cName = args.card.name
-    if (pname == self.myName) {
-      console.log('I discard ' + cName)
-    } else {
-      console.log(pname + ' discards ' + cName)
-    }
   }
 
   // A player just bought a card. CAN be myself.
