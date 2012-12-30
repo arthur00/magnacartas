@@ -31,5 +31,8 @@ $(function() {
   $('#buyCopperBtn').click(function() {
     GAMECOMM.sendBuy('Copper')
   })
+  $('#buyCommodoreBtn').click(function() {
+    GAMECOMM.sendBuy('Commodore')
+  })
   
 });

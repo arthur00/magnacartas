@@ -29,13 +29,13 @@ function GameCommWebSocket() {
     'playerLeft' : GAMEMODEL.playerLeft,
     'gameStart' : GAMEMODEL.gameStart,
     'gameOver' : GAMEMODEL.gameOver,
+    'cleanup' : GAMEMODEL.cleanup,
     'endTurn' : GAMEMODEL.endTurn,
     'resetDeck' : GAMEMODEL.someoneResetDeck,
     'drawCard' : GAMEMODEL.drawCard,
     'otherDrawCard' : GAMEMODEL.otherDrawCard,
-    'discardFromHand' : GAMEMODEL.someoneDiscardFromHand,
     'playMoney' : GAMEMODEL.someonePlayMoney,
-    'buy': GAMEMODEL.someoneBuy
+    'buy' : GAMEMODEL.someoneBuy
   }
 
   // receive handler

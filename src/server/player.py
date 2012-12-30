@@ -3,8 +3,10 @@ from random import shuffle
 from server.card import MoneyCard
 
 PHASE_NOTMYTURN = 'notmyturn'
+PHASE_STARTING = 'starting'
 PHASE_ACTION = 'action'
 PHASE_BUYING = 'buy'
+PHASE_CLEANUP = 'cleanup' # when you discard your tableau and draw a new hand
 
 
 
@@ -23,6 +25,7 @@ class Player():
         self.deck = []
         self.hand = []
         self.discard = []
+        self.tableau = []
 
         self._phase = PHASE_NOTMYTURN
         self.coins = 0 # how many coins i have in play, during my buying phase
@@ -31,7 +34,7 @@ class Player():
 
 
     def __repr__(self):
-        return '<Player %s>' % self.name
+        return '<Player %s - %s>' % (self.name, self._phase)
     def __str__(self):
         return self.__repr__()
 
@@ -51,6 +54,7 @@ class Player():
         return self._handler != None
 
 
+
     def on_disconnect(self):
         """ My socket closed. Notify the game. """
         if self._handler:
@@ -59,10 +63,12 @@ class Player():
             logger.info('player left: %s' % self.name)
 
 
+
     def kick_out(self):
         """ The game kicks me out, eg when the game has ended. """
         self._handler.close()
         logger.info('player kicked: %s' % self.name)
+
 
 
     def send(self, cmd, data):
@@ -70,6 +76,9 @@ class Player():
         self._handler.send({cmd: data})
 
 
+
+    ############################  player joined/left 
+    
     def welcome(self, table, numplayers):
         """ Send the current configuration of the table. 
         The game has not started yet. 
@@ -81,12 +90,14 @@ class Player():
         self.send('welcome', data)
 
 
+
     def player_joined(self, table, new_player):
         """ Notify the client that another player joined. """
         data = {'table': [player.serialize('name') for player in table],
                 'newPlayer': new_player.serialize('name')
                 }
         self.send('playerJoined', data)
+
 
 
     def player_left(self, table, old_player):
@@ -97,6 +108,9 @@ class Player():
         self.send('playerLeft', data)
 
 
+
+    ########################  game start/end
+    
     def game_start(self, table, piles, start_player):
         """ Notify the client of the beginning of the game """
         data = {'table': [p.serialize('name') for p in table],
@@ -104,6 +118,7 @@ class Player():
                 'startingPlayer': start_player.serialize('name')
                 }
         self.send('gameStart', data)
+
 
 
     def game_over(self, table, winner):
@@ -115,17 +130,46 @@ class Player():
 
 
 
+    ########################## cleanup, next turn
+    
     def on_endMyTurn(self):
-        """ The client says his turn ended. """
-        if self._phase is not PHASE_NOTMYTURN:
-            self._game.end_turn(self)
+        """ The client says his turn ended. 
+        Move cards in the tableau and hand to the discard.
+        """
+        if self._phase in [PHASE_ACTION, PHASE_BUYING]:
+            self._phase = PHASE_CLEANUP
+            num_discarded = 0
+            shuffle(self.tableau)
+            while self.tableau:
+                card = self.tableau.pop()
+                self.discard.append(card)
+                num_discarded += 1
+            shuffle(self.hand)
+            while self.hand:
+                card = self.hand.pop()
+                self.discard.append(card)
+                num_discarded += 1
+            discard_top = self.discard[-1]
+            self._game.player_startcleanup(self, discard_top, num_discarded)
         else:
             logger.warn('player %s sent endTurn message out of his turn' % self.name)
 
 
-    def end_turn(self, prev_player, next_player):
-        """ Notify the client that someone's turn ended, 
-        and someone's turn begins.
+
+    def ntf_cleanup(self, cur_player, discard_top, num_discarded):
+        """ Notify the client that someone's cleanup phase begins.
+        discard_top is the top card of the discard pile.
+        """
+        data = {'player': cur_player.serialize('name'),
+                'top': discard_top.serialize(),
+                'num': num_discarded}
+        self.send('cleanup', data)
+
+
+
+    def ntf_endturn(self, prev_player, next_player):
+        """ Notify the client that the cleanup phase of the current player ended, 
+        and that someone's turn begins.
         prev_player is None during the first turn of the first player.
         next_player is None during the last turn.
         """
@@ -136,6 +180,8 @@ class Player():
             self.buys = 1
             self._phase = PHASE_NOTMYTURN
         if next_player and self.name == next_player.name: # beginning of my turn
+            # TODO: if I have a private maid, trigger a starting phase
+            # no starting maid: trigger action phase directly
             self._phase = PHASE_ACTION
 
         # send the information anyway
@@ -147,7 +193,8 @@ class Player():
         self.send('endTurn', data)
 
 
-    ###########################  hand, deck, and discard pile
+
+    ###########################  hand, deck, discard
 
     def reset_deck(self, deck=[]):
         """ Shuffle my discard pile and put it as my deck.  
@@ -161,11 +208,11 @@ class Player():
             self.discard = []
             shuffle(cards)
             self.deck = cards
-        # send to me
         return len(self.deck)
 
 
-    def someone_reset_deck(self, player, num_cards):
+
+    def ntf_resetdeck(self, player, num_cards):
         """ Notify me that a player shuffled his deck and emptied his discard pile.
         This player CAN be me. 
         """
@@ -185,12 +232,13 @@ class Player():
         except IndexError: # deck is empty: replace by the discard pile
             if len(self.discard) == 0: # discard is also empty
                 return # dont draw any card
-            self._game.player_reset_deck(self)
+            self._game.player_resetdeck(self)
             card = self.deck.pop()
 
         self.hand.append(card)
         data = {'card': card.serialize()}
         self.send('drawCard', data)
+
 
 
     def other_draw_card(self, player):
@@ -200,28 +248,7 @@ class Player():
 
 
 
-    def discard_hand(self):
-        """ Put my hand in in the discard pile. Return the discarded cards. """
-        hand = self.hand[:] # copy
-        self.hand = []
-        for card in hand:
-            self.discard.append(card)
-        hand.reverse() # so that the 1st card is the top of the discard pile
-        return hand
-
-
-    def someone_discard_card_from_hand(self, player, card):
-        """ Notify me that a player discarded his hand. 
-        This player CAN be myself.
-        """
-        data = {'player': player.serialize('name'),
-                'card': card.serialize()}
-        self.send('discardFromHand', data)
-
-
-
     ###############  put down money, buy a card 
-
 
     def on_playAllMyMoneys(self):
         """ Put my money cards in the tableau.  
@@ -231,13 +258,14 @@ class Player():
             self._phase = PHASE_BUYING
             for card in self.hand:
                 if isinstance(card, MoneyCard):
-                    self.coins += card.coin
-                    self._game.player_place_money(self, card)
+                    self.coins += card.coins
+                    self._game.player_playmoney(self, card)
         else:
             logger.warn('player %s sent playAllMyMoney out of action phase' % self.name)
 
 
-    def someone_place_money(self, player, card):
+
+    def ntf_playmoney(self, player, card):
         """ Notify me that a player placed a money card down to buy stuffs. """
         data = {'player': player.serialize('name'),
                 'card': card.serialize()}
@@ -246,7 +274,7 @@ class Player():
 
 
     def on_buy(self, args):
-        """ Player client tells me he buys ONE card. kwargs = {'name': 'Copper'} """
+        """ Player client tells me he buys ONE card. args = {'name': 'Copper'} """
         try:
             card_name = args['name']
         except KeyError:
@@ -265,11 +293,13 @@ class Player():
                         + ' sent a buy message out of his buying phase')
 
 
-    def someone_buy(self, player, card):
-        """ """
+
+    def ntf_buy(self, player, card):
+        """ A player (maybe me) just bought a card. """
         if player.name == self.name:
             self.discard.append(card)
             self.buys -= 1
         data = {'player': player.serialize('name'),
                 'card': card.serialize()}
         self.send('buy', data)
+
