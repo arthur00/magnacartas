@@ -541,7 +541,7 @@ function View() {
     
     if (size == "normal") {    
       card = $('<div/>').attr({
-        'class' : 'card faceDown'
+        'class' : 'cardSized faceDown'
       })
     }
     else if (size == "small") {
@@ -691,7 +691,7 @@ function View() {
   this.revertAnimationDuration = 500;
   
   this.newCardOpponent = function(pos) {
-    var $card = $('<div/>').attr({'class': 'faceDown card'});
+    var $card = $('<div/>').attr({'class': 'faceDown cardSized'});
     $('#' + pos + 'Hand').append($card);
     this.reArrangeHand(pos);
   }
@@ -707,8 +707,10 @@ function View() {
     var curLeft = 0;
     if (pos == "tableau")
       var cards = $('#actionTableau').children(".card");
-    else  
+    else if (pos == "player") 
       var cards = $('#' + pos + 'Hand').children(".card");
+    else 
+      var cards = $('#' + pos + 'Hand').children(".faceDown");
     if (pos == "player" || pos == "tableau") 
       var startZ = zlayer2;
     else
