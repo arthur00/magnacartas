@@ -119,15 +119,20 @@ function GameModel(playerId) {
   }
 
   // Someone placed a money card down to buy stuffs.
-  // args = {'player': {'name': 'arthur'}, 'card': card1}
+  // args = {'player': {'name': 'arthur'}, 'moneyCards': [card1, card2]}
   // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
   this.someonePlayMoney = function(args) {
     var pname = args.player.name
-    var cname = args.card.name, coins = args.card.coins
+    var cnames = new Array()
+    var coins = 0
+    for (var i = 0; i< args.moneyCards.length; i++) {
+      cnames.push(args.moneyCards[i].name)
+      coins += args.moneyCards[i].coins
+    }
     if (pname == self.myName) {
-      console.log('I play a ' + cname + ' and gain ' + coins + ' coin(s)')
+      console.log('I play ' + cnames.join() + ' and gain ' + coins + ' coin(s)')
     } else {
-      console.log(pname + ' plays a ' + cname + ' and gains ' + coins
+      console.log(pname + ' plays ' + cnames.join() + ' and gains ' + coins
           + ' coin(s)')
     }
   }

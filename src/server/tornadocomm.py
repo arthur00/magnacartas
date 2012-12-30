@@ -53,13 +53,13 @@ class ClientHandler(WebSocketHandler):
             # if m is {'draw': {'qty':3}}
             # then call player.on_draw({'qty':3})
             for cmd, args in m.items():
-                try:
-                    if len(args):
-                        getattr(self._player, 'on_' + cmd)(args)
-                    else: # no args passed
-                        getattr(self._player, 'on_' + cmd)()
-                except AttributeError,e:
-                    logger.error(e)
+                #try:
+                if len(args):
+                    getattr(self._player, 'on_' + cmd)(args)
+                else: # no args passed
+                    getattr(self._player, 'on_' + cmd)()
+                #except AttributeError,e:
+                #    logger.error(e)
 
 
 def start_server(port, url):

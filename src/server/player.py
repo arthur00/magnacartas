@@ -152,7 +152,7 @@ class Player():
             discard_top = self.discard[-1]
             self._game.player_startcleanup(self, discard_top, num_discarded)
         else:
-            logger.warn('player %s sent endTurn message out of his turn' % self.name)
+            logger.error('player %s sent endTurn message out of his turn' % self.name)
 
 
 
@@ -188,6 +188,7 @@ class Player():
         data = {}
         if next_player:
             data['next'] = next_player.serialize('name')
+            # TODO: should also send how many actions, buys, and coins  
         if prev_player:
             data['prev'] = prev_player.serialize('name')
         self.send('endTurn', data)
@@ -245,7 +246,7 @@ class Player():
                 # replace deck by discard pile
                 if len(self.discard) == 0: # discard is also empty
                     return # dont draw any card
-                self.resetdeck(self)
+                self.resetdeck()
                 card = self.deck.pop()
             # add card to hand anyway
             self.hand.append(card)
@@ -285,21 +286,25 @@ class Player():
         """ Put my money cards in the tableau.  
         Count and store the amount of money available to me. 
         """
-        if self._phase == PHASE_ACTION:
+        if self._phase is PHASE_ACTION:
             self._phase = PHASE_BUYING
+            moneycards = []
             for card in self.hand:
                 if isinstance(card, MoneyCard):
                     self.coins += card.coins
-                    self._game.player_playmoney(self, card)
+                    moneycards.append(card)
+            logger.info('%s spends %d coins' % (self.name, self.coins))
+            self._game.player_playmoney(self, moneycards)
         else:
-            logger.warn('player %s sent playAllMyMoney out of action phase' % self.name)
+            logger.error('player %s sent playAllMyMoney out of action phase' % self.name)
 
 
 
-    def ntf_playmoney(self, player, card):
+    def ntf_playmoney(self, player, moneycards):
         """ Notify me that a player placed a money card down to buy stuffs. """
         data = {'player': player.serialize('name'),
-                'card': card.serialize()}
+                'moneyCards': [card.serialize() for card in moneycards]}
+        # TODO: should also send a bonus effect containing +coins
         self.send('playMoney', data)
 
 
@@ -319,6 +324,8 @@ class Player():
         if player.name == self.name:
             self.discard.append(card)
             self.buys -= 1
+            self.coins -= card.cost
+            logger.info('%s buys %s' % (self.name, card.name))
         data = {'player': player.serialize('name'),
                 'card': card.serialize()}
         self.send('buy', data)
@@ -342,6 +349,7 @@ class Player():
                     break
             if in_hand:
                 self.actions -= 1
+                logger.info('%s plays %s' % (self.name, card_name))
                 handcard.do_effect()
             else: # no such card in hand
                 logger.error('Player %s wants to play card %s' % (self.name, card_name)
