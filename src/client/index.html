@@ -17,13 +17,7 @@
 <body>
   <div id='gameBoard'>
     <div id='hiddenLayer'> </div>
-    <div class='faceDown cardSized' id='playerDeck'></div>
-    <div class='mat' id='playerMat'>
-    <div class='smallMat' id='playerSmallMat'></div>
-      <div class='largeMat' id='playerLargeMat'>    
-        <div class='shrink' id='playerShrink'></div>
-      </div>
-    </div>
+    <!--Table -->
     <div class='tableau' id='actionTableau'></div>
     <div id='buyingBoard'>
       <div id='smallBuying'></div>
@@ -31,8 +25,19 @@
         <div class='close' id='buyingClose'></div>
       </div>
     </div>
-    <div class='handArea' id='playerHand'> </div>
-    <div class='faceUp cardSized' id='playerDiscard'></div>
+    
+    <!-- Player -->
+    <div id='playerArea'>
+      <div class='faceDown cardSized' id='playerDeck'></div>
+      <div class='handArea' id='playerHand'> </div>
+      <div class='faceUp cardSized' id='playerDiscard'></div>        
+      <div class='mat' id='playerMat'>
+        <div class='smallMat' id='playerSmallMat'></div>
+        <div class='largeMat' id='playerLargeMat'>    
+          <div class='shrink' id='playerShrink'></div>
+        </div>
+      </div>
+    </div>
     
     <!-- Left Opponent -->
     <div id='leftOpponent'>

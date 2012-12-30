@@ -37,9 +37,9 @@ radius = 100;
 
   // hack to keep cards on top of each others when clicked or dragged
   var curZ = 1;
+  
 
-
-    
+   
 var isEven = function(someNumber){
     return (someNumber%2 == 0) ? true : false;
 };
@@ -263,7 +263,6 @@ function View() {
       // Am I moving a card from someone's hand? If so, actually remove it from the player's hand. 
       if (source[1] == "hand") {
         if (source[0] == "player") {
-          console.log("in player");
           card = $('#playerHand ._c_'+ctype).get(0);
           if (!card)
             throw "No card in hand!";
@@ -510,6 +509,9 @@ function View() {
       
       var $card = this.newCard(ctype);
       $card.draggable('disable');
+      $card.dblclick(function() {
+        view.buyCard(ctype,["player","discard"]);
+      });
       leftPos = pos[1];
       topPos = pos[0];
       $card.css({position: 'absolute', left:leftPos, top:topPos});
@@ -532,20 +534,26 @@ function View() {
     // Create a new card to be dragged to player hand
     var newcard = this.newCard(ctype);
     $('#largeBuying').append(newcard);
-    newcard.css({position: 'absolute', 'top':stack.position().top, 'left':stack.position().left, 'z-index':zlayer3+1});
-    
-    if (destination == "player") 
-      this.playerBuyCard(ctype,newcard);
+    if (stack.position().left == 0) {
+      position = $('#buyingBoard').width()/2;
+      postype = 'absolute';
+      $('#buyingBoard').append(newcard);
+    }
     else {
-      newcard.remove();
-      // Code for sending "bad habits/illnesses"
+      position = stack.position();
+      postype = 'absolute';
+    }
+    newcard.css({position: postype, 'top':position.top, 'left':position.left, 'z-index':zlayer3+1});
+     
+    
+    if (destination[0] == "player") {
+      this.moveCardFromHand(["card",newcard],["player",destination[1]],ctype);
+    }
+    else {
+      this.moveCardFromHand(["card",newcard],[destination[0],destination[1]],ctype);
+      this.showBuyingBoard("close");
     }
   } 
-  
-  this.playerBuyCard = function(ctype,newcard) {
-    // Move newly created card to player hand
-    this.moveCardFromHand(newcard,"player",ctype, function(newcard) {view.addCardToHand(newcard);});
-  }
   
   this.addCardToMat = function(ctype,pos) {
     $smallMat = $('#' + pos + 'SmallMat');
