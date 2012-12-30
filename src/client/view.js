@@ -5,6 +5,9 @@
 view = new View();
 model = new Model(view);
 
+normalCardSize = {height:160, width:100};
+smallCardSize = {height:80, width:50};
+
 minStepAngle = 10;
 minorRadius = 100;
 majorRadius = 600;
@@ -44,8 +47,8 @@ var isEven = function(someNumber){
 function calculateGrid(container,spacing) {
   var width = container.width();
   var height = container.height();
-  var cardWidth = $('.card').width();
-  var cardHeight = $('.card').height();
+  var cardWidth = normalCardSize.width;
+  var cardHeight = normalCardSize.height;
   
   var maxY = Math.floor(height / (cardHeight + spacing));
   var maxX = Math.floor(width / (cardWidth + spacing));
@@ -161,7 +164,7 @@ function View() {
 
     // wire the logic in deck drawing
     $('#playerDeck').click(function() {
-      $card = view.newCard('blackBeard');
+      var $card = view.newCard('blackBeard');
       view.addCardToHand($card);
     });
     
@@ -246,6 +249,8 @@ function View() {
     startPoint = coordinates[source]
     var animEasing="easeInOutExpo";
 		var speed=900;
+		var sourceSize="normal";
+		var destinationSize="normal";
     
     var card = null;
     var startPoint = null;
@@ -257,39 +262,68 @@ function View() {
       startPoint = coordinates[source[0]][source[1]];
       // Am I moving a card from someone's hand? If so, actually remove it from the player's hand. 
       if (source[1] == "hand") {
-        if (source[0] == "player")
-            card = $('#playerHand ._c_'+ctype).get(0);
-        else if (source[0] == "left" || source[0] == "right" || source[0] == "across")
+        if (source[0] == "player") {
+          console.log("in player");
+          card = $('#playerHand ._c_'+ctype).get(0);
+          if (!card)
+            throw "No card in hand!";
+          startPoint = null;
+        }
+        else if (source[0] == "left" || source[0] == "right" || source[0] == "across") {
             card = $('#' + source[0] + 'Hand').children().get(0);
             if (ctype) {
               startPoint = [$(card).offset().left, $(card).offset().top];
               $(card).remove();
               card = view.newCard(ctype);
             }
+         }
       }
       
       // Moving from a player's mat. Tricky, since I need to remove the card from his mat.
       else if (source[1] == "mat") {
-        throw "Mat as a source not yet supported."
+        var largeStack = $('#'+source[0]+'LargeMat').children('._c_' + ctype);
+        var smallStack = $('#'+source[0]+'SmallMat').children('._c_' + ctype);
+        var num = smallStack.children('.stackCounter').text();
+        // Reduce counter of cards after moving a card from it
+        card = this.newCard(ctype);
+        if (num > 1) {
+          smallStack.children('.stackCounter').text(parseInt(num) - 1 + "");
+          largeStack.children('.stackCounter').text(parseInt(num) - 1 + "");
+          
+          // Create a new card to be dragged to player hand
+        }
+        else {
+          smallStack.remove();
+          largeStack.remove();
+        }
       }
-      
       // Moving from a player's deck. Common case of drawing for example
       else if (source[1] == "deck") {
-        if (source[0] == "player") {
-          //TODO: allow face up.
-          card = this.newFacedownCard("normal");
+        sourceSize = "small";
+        if (!ctype) { // facedown movement
+          if (source[0] == "player") {
+            card = this.newFacedownCard("normal");
+          }
+          else { /* left, across, right */
+            card = this.newFacedownCard("small");
+          }
         }
-        else { /* left, across, right */
-          card = this.newFacedownCard("small");
+        else {
+          if (source[0] == "player") {
+            card = this.newCard(ctype);
+          }
+          else {
+            card = this.newSmallCard(ctype);
+          }
         }
       }
       // Moving from a player's discard
       else if (source[1] == "discard") {
+        sourceSize = "small";      
         throw "Discard as a source not yet supported."
         // TBD: Do we need this ever? Except when reshuffling, but that should be separate..      
       }
     }
-    
     // Use the created card and send it to the destination
     if (!startPoint) {
       var xstart = $(card).offset().left;
@@ -331,47 +365,19 @@ function View() {
           }
         }
       }
-      else if (destination[1] == "deck" || destination[1] == "discard") {
-        if (destination[0] == "player") {
-        }
-        // Shrink to opponent's deck size.
-        else {
-          moveAnimation['width'] = $('#'+destination[0]+'Deck').width();
-          moveAnimation['height'] = $('#'+destination[0]+'Deck').height();
-          
-          var cardSize = $('.card').height();
-          var nameFontSize = parseInt($('.card>.name').css('font-size'));
-          var effectFontSize = parseInt($('.card>.effect').css('font-size'));
-          var costFontSize = parseInt($('.card>.cost').css('font-size'));
-          
-          stepAnim = function(now,fx) {
-            if (fx.prop == "height") {
-              p = fx.now / cardSize;
-              fn = Math.round(p*nameFontSize);
-              fe = Math.round(p*effectFontSize);
-              fc = Math.round(p*costFontSize);
-              
-              $name = $(this).children('.card>.name');
-              $effect = $(this).children('.card>.effect');
-              $cost = $(this).children('.card>.cost');
-              
-              $name.css({'font-size':fn+"px"});
-              $effect.css({'font-size':fe+"px"});
-              $cost.css({'font-size':fc+"px"});
-            }
-          }
-        }
-        
-        if (destination[1] == "deck") {
-          afterMoveAnimation = function(_card_) {
-              _card_.remove();
-          }  
-        }
-        else if (destination[1] == "discard") {
-            afterMoveAnimation = function(_card_) {
-              view.addCardToDiscard(_card_,destination[0]);
-          }          
-        }
+      else if (destination[1] == "deck") {
+        if (destination[0] != "player")
+          destinationSize = "small";
+        afterMoveAnimation = function(_card_) {
+            _card_.remove();
+        }  
+      }
+      else if (destination[1] == "discard") {
+        if (destination[0] != "player")
+            destinationSize = "small";
+        afterMoveAnimation = function(_card_) {
+        view.addCardToDiscard(_card_,destination[0]);
+        }          
       }
       else if (destination[1] == "buying") {
         afterMoveAnimation = function(_card_) {
@@ -380,6 +386,64 @@ function View() {
         }
       }
     }
+
+    if (sourceSize != destinationSize) {    
+      if (destinationSize == "small") {
+        // Shrink to opponent's deck size.
+        moveAnimation['width'] = smallCardSize.width;
+        moveAnimation['height'] = smallCardSize.height;
+        
+        var cardHeight = normalCardSize.height;
+        var nameFontSize = parseInt($('.card>.name').css('font-size'));
+        var effectFontSize = parseInt($('.card>.effect').css('font-size'));
+        var costFontSize = parseInt($('.card>.cost').css('font-size'));
+        
+        stepAnim = function(now,fx) {
+          if (fx.prop == "height") {
+            p = fx.now / cardHeight;
+            fn = Math.round(p*nameFontSize);
+            fe = Math.round(p*effectFontSize);
+            fc = Math.round(p*costFontSize);
+            
+            $name = $(this).children('.card>.name');
+            $effect = $(this).children('.card>.effect');
+            $cost = $(this).children('.card>.cost');
+            
+            $name.css({'font-size':fn+"px"});
+            $effect.css({'font-size':fe+"px"});
+            $cost.css({'font-size':fc+"px"});
+          }
+        }
+      }
+      else if (sourceSize == "small") { 
+        // Shrink to opponent's deck size.
+        moveAnimation['width'] = normalCardSize.width;
+        moveAnimation['height'] = normalCardSize.height;
+        
+        var cardHeight = normalCardSize.height;
+        var nameFontSize = parseInt($('.card>.name').css('font-size'));
+        var effectFontSize = parseInt($('.card>.effect').css('font-size'));
+        var costFontSize = parseInt($('.card>.cost').css('font-size'));
+        
+        stepAnim = function(now,fx) {
+          if (fx.prop == "height") {
+            p = fx.now / cardHeight;
+            fn = Math.round(p*nameFontSize);
+            fe = Math.round(p*effectFontSize);
+            fc = Math.round(p*costFontSize);
+            
+            $name = $(this).children('.card>.name');
+            $effect = $(this).children('.card>.effect');
+            $cost = $(this).children('.card>.cost');
+            
+            $name.css({'font-size':fn+"px"});
+            $effect.css({'font-size':fe+"px"});
+            $cost.css({'font-size':fc+"px"});
+          }
+        }
+      }
+    }
+
     
     /*
     $(card).animate({
@@ -439,7 +503,6 @@ function View() {
   this.addBuyingStack = function(ctype,num, pos) {
     var $buyingStack = $('#largeBuying');
     stack = $buyingStack.children('._c_' + ctype);
-    console.log("sending to buying stack");
     if (stack.length == 0) {
       var $counter = $('<div/>');
       $counter.addClass('stackCounter');
@@ -461,15 +524,14 @@ function View() {
   
   this.buyCard = function(ctype, destination) {
     var $buyingStack = $('#largeBuying');
-    stack = $buyingStack.children('._c_' + ctype);
-    num = stack.children('.stackCounter').text();
+    var stack = $buyingStack.children('._c_' + ctype);
+    var num = stack.children('.stackCounter').text();
     // Reduce counter of cards after buying
     stack.children('.stackCounter').text(parseInt(num) - 1 + "");
     
     // Create a new card to be dragged to player hand
     var newcard = this.newCard(ctype);
     $('#largeBuying').append(newcard);
-    console.log(stack.offset());
     newcard.css({position: 'absolute', 'top':stack.position().top, 'left':stack.position().left, 'z-index':zlayer3+1});
     
     if (destination == "player") 
@@ -547,8 +609,27 @@ function View() {
     else if (size == "small") {
       card = $('<div/>').attr({
         'class' : 'smallDeck faceDown'
-      })      
+      })
     }
+    return card;
+  }
+  
+
+  this.newSmallCard = function(ctype) {
+    var card = this.newCard(ctype);
+    return this.shrinkCard(card);
+  }
+
+  this.shrinkCard = function(card) {
+    card.css({width: smallCardSize.width, height:smallCardSize.height} );
+    
+    effect = card.children('.card>.effect');
+    $(effect).css({'font-size':Math.round(parseInt($('.card>.cost').css('font-size'))/2) });
+    cost = card.children('.card>.cost');
+    $(cost).css({'font-size':Math.round(parseInt($('.card>.effect').css('font-size'))/2) });
+    cardName = card.children('.card>.name');
+    $(cardName).css({'font-size':Math.round(parseInt($('.card>.name').css('font-size'))/2) });
+    
     return card;
   }
   
