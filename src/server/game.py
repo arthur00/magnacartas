@@ -1,6 +1,6 @@
 from logger import logger
 from player import Player
-from server.card import pick_piles, CopperCard, CommodoreCard
+from server.card import pick_piles, CopperCard, CartographerCard
 from tornadocomm import set_gateway, start_server
 import random
 
@@ -76,7 +76,7 @@ class PirateGame():
             cur_players = list(self.table)
             self.table.append(new_player)
             for cur_player in cur_players:
-                cur_player.player_joined(self.table, new_player)
+                cur_player.ntf_playerjoined(self.table, new_player)
             # send  the current game state to the new player
             new_player.welcome(self.table, self.numplayers)
             # start the game if enough players are connected
@@ -91,10 +91,10 @@ class PirateGame():
         """
         self.table.remove(player)
         for cur_player in self.table:
-            cur_player.player_left(self.table, player)
+            cur_player.ntf_playerleft(self.table, player)
         if len(self.table) == 1:
             last_player = self.table[0]
-            self.game_over(last_player)
+            self.ntf_gameover(last_player)
 
 
 
@@ -110,18 +110,16 @@ class PirateGame():
         self.game_started = True
         samplers = [card_class(self, True) for card_class in self.piles.values()]
         for player in self.table:
-            player.game_start(self.table, samplers, start_player)
+            player.ntf_gamestart(self.table, samplers, start_player)
 
         # each player prepares his hand and deck
         for player in self.table:
             deck = [CopperCard(self) for _ in range(7)]
-            deck += [CommodoreCard(self) for _ in range(3)]
+            deck += [CartographerCard(self) for _ in range(3)]
             random.shuffle(deck)
             num_cards = player.reset_deck(deck)
             [p.ntf_resetdeck(player, num_cards) for p in self.table]
-            for _ in range(5):
-                player.draw_card()
-                [p.other_draw_card(player) for p in self.table if p is not player]
+            player.drawcards(5)
 
         # begin starting player's turn
         logger.info('turn of: %s' % start_player.name)
@@ -135,34 +133,32 @@ class PirateGame():
         for player in self.table[1:]:
             if player.score > winner.score:
                 winner = player
-        self.game_over(winner)
+        self.ntf_gameover(winner)
 
 
-    def game_over(self, winner):
+    def ntf_gameover(self, winner):
         """ A player won. Tell everyone, and restart the game. """
         logger.info('game over: %s won' % winner.name)
         for player in self.table:
-            player.game_over(self.table, winner)
+            player.ntf_gameover(self.table, winner)
         self.reset()
 
 
     def player_startcleanup(self, player, discard_top, num_discarded):
         """ A player's turn ended. Tell everyone, and start next player's turn. 
         """
-        if player is not self.cur_player: # not the current player: cheater?
+        if player != self.cur_player: # not the current player: cheater?
             logger.warn('player %s tried to end his turn,' % player.name +
                         'but it was the turn of %s' % self.cur_player.name)
             return
-        
+
         # broadcast the start of the cleanup phase
         for p in self.table:
             p.ntf_cleanup(player, discard_top, num_discarded)
-            
+
         # finish that player's cleanup phase: draw a new hand
-        for _ in range(5):
-            player.draw_card()
-            [p.other_draw_card(player) for p in self.table if p is not player]
-        
+        player.drawcards(5)
+
         # check for game end
         if self.num_piles_gone == NUM_PILES_FOR_GAME_END:
             for p in self.table:
@@ -178,12 +174,25 @@ class PirateGame():
 
 
 
+    ##################  draws, buys, coins, actions
 
-    def player_resetdeck(self, player):
-        """ A player's deck is empty. Ask the player to reset his deck, 
-        and notify all players. """
-        num_cards = player.reset_deck()
-        [p.ntf_resetdeck(player, num_cards) for p in self.table]
+    def player_draw(self, player, numcards):
+        """ Tell players that another player drew a card. """
+        [p.ntf_drawcards(player, numcards) for p in self.table if p is not player]
+
+
+
+    def player_addbuys(self, player, deltabuys, totalbuys):
+        """ Tell players that another player gained +buys """
+        [p.ntf_addbuys(player, deltabuys, totalbuys) for p in self.table if p is not player]
+
+
+
+    def player_resetdeck(self, player, numcards):
+        """ Notify all players that another player's deck was empty and reshuffled.
+        numcards is the number of cards in the deck after it got reshuffled. 
+        """
+        [p.ntf_resetdeck(player, numcards) for p in self.table]
 
 
 

@@ -22,17 +22,35 @@ $(function() {
   GAMEVIEW = new GameViewJquery();
   GAMECOMM = new GameCommWebSocket();
 
+  // basic buttons
   $('#endTurnBtn').click(function() {
     GAMECOMM.sendEndMyTurn()
   })
   $('#playTreasuresBtn').click(function() {
     GAMECOMM.sendPlayAllMyMoneys()
   })
+
+  // buy buttons
   $('#buyCopperBtn').click(function() {
     GAMECOMM.sendBuy('Copper')
+  })
+  $('#buySilverBtn').click(function() {
+    GAMECOMM.sendBuy('Silver')
+  })
+  $('#buyGoldBtn').click(function() {
+    GAMECOMM.sendBuy('Gold')
   })
   $('#buyCommodoreBtn').click(function() {
     GAMECOMM.sendBuy('Commodore')
   })
+  $('#buyCartoBtn').click(function() {
+    GAMECOMM.sendBuy('Cartographer')
+  })
+
+  // play buttons
+  $('#playCartoBtn').click(function() {
+    GAMECOMM.sendPlay('Cartographer')
+  })
   
+
 });

@@ -12,11 +12,40 @@
 <script src="gameview-jq.js"></script>
 <script src="gamecomm-ws.js"></script>
 <script src="main.js"></script>
+<style>
+button {
+   width: 100px;
+   height: 100px;
+   font-size: 18px;
+   display: block;
+   float: left;
+}
+button.buy {
+   background-color: gold;
+}
+button.play {
+   background-color: pink;
+}
+
+button.placeholder {
+   visibility: hidden;
+}
+</style>
 </head>
 <body>
+	<button id='buyCopperBtn' class='buy'>buy copper</button>
+	<button id='buySilverBtn' class='buy'>buy silver</button>
+	<button id='buyGoldBtn' class='buy'>buy gold</button>
+   <button id='buyCartoBtn' class='buy'>buy carto</button>
+   <button id='buyCommodoreBtn' class='buy'>buy commodore</button>
+	
+   <button class='placeholder'></button>
+   <button class='placeholder'></button>
+	<button id='playCartoBtn' class='play'>play carto</button>
+	
+   <button class='placeholder'></button>
+   <button class='placeholder'></button>
 	<button id='playTreasuresBtn'>play treasures</button>
-	<button id='buyCopperBtn'>buy copper</button>
-	<button id='buyCommodoreBtn'>buy commodore</button>
 	<button id='endTurnBtn'>end turn</button>
 </body>
 </html>
