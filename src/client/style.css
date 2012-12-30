@@ -304,7 +304,7 @@ img {
       position: absolute;
       top: 0px;
       left: 0px;
-      height:420px;
+      height:500px;
       width:100%; /* same width as the expaning animation in view.js */
       z-index: 1;
     }
@@ -358,9 +358,9 @@ img {
     #leftLargeMat {
       position: absolute;
       top: 0px;
-      left: 80px;
+      left: 0px;
       height:100%;
-      width:630px; /* same width as the expaning animation in view.js */
+      width:710px; /* same width as the expaning animation in view.js */
       z-index: 1;
     }
     
@@ -413,9 +413,9 @@ img {
     #rightLargeMat {
       position: absolute;
       top: 0px;
-      right: 80px;
+      right: 0px;
       height:100%;
-      width:630px; /* same width as the expaning animation in view.js */
+      width:710px; /* same width as the expaning animation in view.js */
       z-index: 1;
     }
 
@@ -470,9 +470,9 @@ img {
     
     #acrossLargeMat {
       position: absolute;
-      top: 80px;
+      top: 0px;
       left: 0px;
-      height:620px;
+      height:700px;
       width:480px; /* same width as the expaning animation in view.js */
       z-index: 1;
     }
