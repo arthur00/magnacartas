@@ -80,13 +80,13 @@ function View() {
       $('#largeBuying').hide();
       $('#hiddenLayer').hide();
       
-      $('#leftShrink').hide();
-      $('#leftShrink').css({rotate:180});
-      $('#rightShrink').hide();
-      $('#acrossShrink').hide();
-      $('#acrossShrink').css({rotate: -90});
-      $('#playerShrink').hide();
-      $('#playerShrink').css({rotate: 90});
+      /*
+      $('#playerOpenClose').css({rotate:45});
+      $('#leftOpenClose').css({rotate:45});
+      $('#rightOpenClose').css({rotate:45});
+      $('#acrossOpenClose').css({rotate:45});
+      */
+      $('.openclose').css({rotate:45, 'z-index':zlayer1});
       
       $('#leftLargeMat').hide();
       $('#rightLargeMat').hide();
@@ -105,62 +105,14 @@ function View() {
           $('#buyingClose').hide();
           view.showBuyingBoard("close");
       });
-      
-      $('#playerMat').click(
-		  function() { //mouse over
-              view.SlidePanels($(this),"open", "player");
-              $('#playerShrink').show();
-	   });
-		  
-      $('#playerShrink').click(
-		  function(e) { //mouse out
-		      e.stopPropagation();
-		      $('#playerShrink').hide();
-              view.SlidePanels($('#playerMat'),"close", "player");
-	   });
-                  
-      $('#leftMat').click(
-		  function() { 
-              view.SlidePanels($(this),"open", "left");
-              $('#leftShrink').show();
-	   });
-		  
-      $('#leftShrink').click(
-		  function(e) { 
-		      e.stopPropagation();
-		      $('#leftShrink').hide();
-              view.SlidePanels($('#leftMat'),"close", "left");
-	   });
-	   
 
-      $('#rightMat').click(
-		  function() { 
-    		  $('#rightShrink').show();
-              view.SlidePanels($(this),"open", "right");
+      $('.openclose').click(
+		  function(e) {
+		          if ($(this).css("rotate") == "45deg")
+                view.SlidePanels($($(this).parent()),"open");
+              else
+                view.SlidePanels($(this).parent(),"close");
 	   });
-	  
-		  
-      $('#rightShrink').click(
-		  function(e) { 
-		      $('#rightShrink').hide();
-		      e.stopPropagation();
-              view.SlidePanels($('#rightMat'),"close", "right");
-	   });
-	   
-	   $('#acrossMat').click(
-		  function() { 
-		      $('#acrossShrink').show();
-              view.SlidePanels($(this),"open", "across");
-	   });
-	  
-		  
-      $('#acrossShrink').click(
-		  function(e) { 
-		      $('#acrossShrink').hide();
-		      e.stopPropagation();
-              view.SlidePanels($('#acrossMat'),"close", "across");
-	   });
-
 
     // wire the logic in deck drawing
     $('#playerDeck').click(function() {
@@ -727,47 +679,51 @@ function View() {
 
     //slide in/out left pane function
 	this.SlidePanels = function(container,action, pos){
+	  if (!pos) {
+	    pos = container.attr("id");
+	  }
 	  $outer_container = container;
-	  shrink = $outer_container.children(".shrink");
+	  $openclose = $outer_container.children('.openclose');
 	  var speed=900;
 		var width = $outer_container.width();
 		var easing="easeInOutExpo";
 		
-		if (pos == "left" || pos == "right") {
+		if (pos == "leftMat" || pos == "rightMat") {
 		  openAnim = {width: 80};
 		  stopAnim = {width: 710};
 		}
-		else if (pos == "across") {
+		else if (pos == "acrossMat") {
 		  openAnim = {height: 80};
 		  stopAnim = {height: 700};
 		}
-		else if (pos == "player") {
+		else if (pos == "playerMat") {
   		openAnim = {height: 80};
 		  stopAnim = {height: 500};
 		}
 		else {
   		    return false;
-		}		
+		}
 		if(action=="close") {
 		  this.enableOtherEvents(container);
-		  $outer_container.children('.largeMat').hide();		
-      $outer_container.children('.smallMat').show();		
+		  $outer_container.children('.largeMat').hide();	
+      $outer_container.children('.smallMat').show();
+      $openclose.transition({"rotate":"45"});
 			$outer_container.stop().animate(
 			openAnim, 
 			speed,easing, 
 			function() {
      		  $outer_container.css({'z-index':zlayer0});
-	       	$(shrink).css({'z-index':zlayer0+1})
+	       	//$(shrink).css({'z-index':zlayer0+1})
 			});
 		} 
 		else {
     		this.disableOtherEvents(container);
 		    $outer_container.css({'z-index':zlayer3});
-		    $(shrink).css({'z-index':zlayer3});
 			  $outer_container.stop().animate(stopAnim, speed, easing,
 			  function() {
 			    $outer_container.children('.smallMat').hide();
 			    $outer_container.children('.largeMat').show();
+			    $openclose.transition({"rotate":"0"});
 			  } 
 			  );		
 		}

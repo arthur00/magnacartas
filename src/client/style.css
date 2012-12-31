@@ -191,12 +191,42 @@ img {
   position: absolute;
   height: 30px;
   width: 30px;
-  top: -10px;
-  right: -10px;
+  top: 0px;
+  right: 0px;
   
   background-repeat:no-repeat;
   background-image:url('img/xbutton.png');
   background-size: cover;
+}
+
+.openclose {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  
+  background-repeat:no-repeat;
+  background-image:url('img/xbutton.png');
+  background-size: cover;
+}
+
+#leftOpenClose {
+  bottom: 0px;
+  right: 0px;
+}
+
+#rightOpenClose {
+  top: 0px;
+  left: 0px;
+}
+
+#acrossOpenClose {
+  bottom: 0px;
+  left: 0px;
+}
+
+#playerOpenClose {
+  top: 0px;
+  right: 0px;
 }
 
 
@@ -511,7 +541,6 @@ img {
 }
 
   #smallBuying {
-    padding: 0px;
     left: 0px;
     top: 0px;  
     height:60px; /* extra 5 for not scrolling */
@@ -522,7 +551,7 @@ img {
   #largeBuying {
     left: 0px; /* (1024 - 600)/2 */
     top: 0px;  
-    margin: 10px;
+    padding: 10px;
     height:710px; /* extra 5 for not scrolling */
     width:780px;
     position: absolute;
