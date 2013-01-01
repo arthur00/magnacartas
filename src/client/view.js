@@ -80,18 +80,14 @@ function View() {
       $('#largeBuying').hide();
       $('#hiddenLayer').hide();
       
-      /*
-      $('#playerOpenClose').css({rotate:45});
-      $('#leftOpenClose').css({rotate:45});
-      $('#rightOpenClose').css({rotate:45});
-      $('#acrossOpenClose').css({rotate:45});
-      */
       $('.openclose').css({rotate:45, 'z-index':zlayer1});
       
-      $('#leftLargeMat').hide();
-      $('#rightLargeMat').hide();
-      $('#acrossLargeMat').hide();
-      $('#playerLargeMat').hide();
+      $('.largeMat').hide();
+
+      
+      /***************************************/
+      /* Clickables */
+      /***************************************/
       
       $('#buyingBoard').click(
 		  function() { 
@@ -114,13 +110,12 @@ function View() {
                 view.SlidePanels($(this).parent(),"close");
 	   });
 
-    // wire the logic in deck drawing
-    $('#playerDeck').click(function() {
-      var $card = view.newCard('blackBeard');
-      view.addCardToHand($card);
-    });
+   
     
-    // wire the hand logic
+    /***************************************/
+    /* Droppables */
+    /***************************************/
+    
     $('#actionTableau').droppable({
       tolerance : "pointer",
       drop : function(event, ui) {
@@ -128,37 +123,50 @@ function View() {
         $(this).effect('highlight');
       }
     });
+    //$('#actionTableau').droppable("disable");
     
-    $('#playerHand').droppable({
+    $('.handArea').droppable({
       tolerance : "pointer",
       drop : function(event, ui) {
-        model.dropPlayerHand(ui.draggable);
+        model.dropHand($(this),ui.draggable);
       }
     });
+    //$('.handArea').droppable("disable");
     
-    // wire the drop logic for the discard
+    $('.mat').droppable({
+      tolerance: "pointer",
+      drop : function(event,ui) {
+        model.dropMat($(this),ui.draggable);
+      }
+    });
+    //$('.mat').droppable("disable");
+    
+    
     $('#playerDiscard').droppable({
       drop : function(event, ui) {
-        $(this).effect('highlight');
-        $($(this).children()).remove();
-        $(this).append(ui.draggable);
-        ui.draggable.css({
-          position: 'absolute',
-          top : '0',
-          left : '0'
-        });
-        ui.draggable.draggable({ // undraggable
-          disabled : true
-        });
+        model.dropDiscard($(this), ui.draggable);
       }
     });
+    //$('.discard').droppable("disable");
     
+    
+    /*******************************************/
+    /* Hacks */
+    /*******************************************/
+    // Hack to add cards, should be removed on deployment
     $('#playerDiscard').click(
         function() {
-            view.newCardOpponent("left");
-            view.newCardOpponent("right");
-            view.newCardOpponent("across");
+            view.addCardToHand("left");
+            view.addCardToHand("right");
+            view.addCardToHand("across");
     });
+    
+    // wire the logic in deck drawing
+    $('#playerDeck').click(function() {
+      var $card = view.newCard('blackBeard');
+      view.addCardToHand("player", $card);
+    });
+    
   } // End init
   
   this.disableOtherEvents = function(container) {
@@ -191,13 +199,33 @@ function View() {
   }
   
   /****************************************************************/
+  /* Div Management */
+  /****************************************************************/
+  
+  this.activateDroppable = function(area, method) {
+    if (area[1] == "hand")
+      $('#'+area[0]+'Hand').droppable("enable");
+    else if (area[1] == "mat")
+      $('#'+area[0]+'Mat').droppable("enable");
+    else if (area[1] == "deck")
+      $('#'+area[0]+'Deck').droppable("enable");
+    else if (area[1] == "discard")
+      $('#'+area[0]+'Discard').droppable("enable");
+    
+    if (method) {
+      // TODO: Replace drop and other methods for the area
+    }
+      
+  }
+  
+  /****************************************************************/
   /* Card movement */
   /****************************************************************/
   
   // Coordinates comes from game-coordinates.js.
   // Source: tuple [source player, area]. E.g. ["player","hand"], ["left","mat"], ["right","discard"].
   //         if card is the source:  ["card",card]
-  this.moveCardFromHand = function(source, destination, ctype, afterMoveAnimation) {
+  this.moveCard = function(source, destination, ctype, afterMoveAnimation) {
     startPoint = coordinates[source]
     var animEasing="easeInOutExpo";
 		var speed=900;
@@ -306,12 +334,12 @@ function View() {
         if (destination[0] == "player") {
           afterMoveAnimation = function(_card_) {
             _card_.remove();
-            view.addCardToHand(view.newCard(ctype));
+            view.addCardToHand("player",view.newCard(ctype));
           }
         }
         else {
           afterMoveAnimation = function(_card_) {
-            view.newCardOpponent(destination[0]);
+            view.addCardToHand(destination[0]);
             _card_.remove();
           }
         }
@@ -394,19 +422,6 @@ function View() {
         }
       }
     }
-
-    
-    /*
-    $(card).animate({
-      crSpline: $.crSpline.buildSequence([startPoint ,endPoint])},
-      500,
-      function() {
-        if (afterMoveAnimation)
-          afterMoveAnimation($(card));
-      }
-    );
-    */
-    
     
     $(card).animate(moveAnimation, 
         {
@@ -421,16 +436,14 @@ function View() {
           step: stepAnim
         });
 
-      
-    
-    
     // Reorganize hand of player, if card came from someone's hand.
     if (source[1] == "hand")
       this.reArrangeHand(source[0]);
-  }
+  } // end of moveCard
   
+    
   /****************************************************************/
-  /* Card management */ 
+  /* Buying Methods */ 
   /****************************************************************/
   
   this.generateBuyingPiles = function() {
@@ -499,49 +512,17 @@ function View() {
      
     
     if (destination[0] == "player") {
-      this.moveCardFromHand(["card",newcard],["player",destination[1]],ctype);
+      this.moveCard(["card",newcard],["player",destination[1]],ctype);
     }
     else {
-      this.moveCardFromHand(["card",newcard],[destination[0],destination[1]],ctype);
+      this.moveCard(["card",newcard],[destination[0],destination[1]],ctype);
       this.showBuyingBoard("close");
     }
   } 
   
-  this.addCardToMat = function(ctype,pos) {
-    $smallMat = $('#' + pos + 'SmallMat');
-    $largeMat = $('#' + pos + 'LargeMat');
-
-    smallStack = $smallMat.children('._c_'+ctype);
-    
-    if (smallStack.length == 0) {
-      smallCard = view.newMatCard(ctype);
-      card = this.newCard(ctype);
-
-      var $counterSmall = $('<div/>');
-      $counterSmall.addClass('stackCounter');
-      $counterSmall.text('1');
-      
-      $(smallCard).append($counterSmall);
-      
-      var $counterBig = $('<div/>');
-      $counterBig.addClass('stackCounter');
-      $counterBig.text('1');
-      
-      $(smallCard).append($counterSmall);
-      $(card).append($counterBig);
-
-      $smallMat.append(smallCard);
-      $largeMat.append(card);
-    }
-    else {
-      bigStack = $largeMat.children('._c_' + ctype);
-      
-      num = smallStack.children('.stackCounter').text();
-      
-      smallStack.children('.stackCounter').text(parseInt(num) + 1 + "");
-      bigStack.children('.stackCounter').text(parseInt(num) + 1 + "");
-    }
-  }
+  /****************************************************************/
+  /*  Create New Card (Mat/Shrunk/Normal/Facedown)  */
+  /****************************************************************/
   
   this.newMatCard = function(ctype) {
     var c = cardData[ctype];
@@ -574,12 +555,14 @@ function View() {
     return card;
   }
   
-
+  
+  // Creates a new small card (discard/deck of opponents);
   this.newSmallCard = function(ctype) {
     var card = this.newCard(ctype);
     return this.shrinkCard(card);
   }
 
+  // Shrink card to discard/deck size of opponents
   this.shrinkCard = function(card) {
     card.css({width: smallCardSize.width, height:smallCardSize.height} );
     
@@ -593,7 +576,7 @@ function View() {
     return card;
   }
   
-  // gain a card in hand given the card id
+  // Creates a new card of ctype.
   this.newCard = function(ctype) {
 
     var c = cardData[ctype];
@@ -613,10 +596,11 @@ function View() {
     var $card = $('<div/>').attr({
       'class' : 'card _c_'+ctype,
     }).append($title, $cost, $img, $effects);
-    // keep cards on top of each others when clicked or dragged
+
     $card.draggable({
       start : function() {
         $(this).css({rotate:'', x:'', y:'', transform:''});
+        model.startDraggingCard($(this));
       },
       revert : function(socketObj) {
         if(socketObj === false)
@@ -630,7 +614,7 @@ function View() {
         }
       },
       revertDuration: view.revertAnimationDuration,
-      containment : '#gameBoard',
+      //containment : '#gameBoard',
       stack: '.card',
       opacity: 0.5,
     });
@@ -639,7 +623,7 @@ function View() {
   } // end newCard
   
   /****************************************************************/
-  /*  Animations effect  */
+  /*  Div Animation effects (Buying/Mat)  */
   /****************************************************************/
   this.showBuyingBoard = function(action) {
     var container = $('#buyingBoard');
@@ -718,32 +702,67 @@ function View() {
 		} 
 		else {
     		this.disableOtherEvents(container);
+    		$openclose.transition({"rotate":"0"});
 		    $outer_container.css({'z-index':zlayer3});
 			  $outer_container.stop().animate(stopAnim, speed, easing,
 			  function() {
 			    $outer_container.children('.smallMat').hide();
 			    $outer_container.children('.largeMat').show();
-			    $openclose.transition({"rotate":"0"});
 			  } 
 			  );		
 		}
 	} // end SlidePanels
 
   /****************************************************************/
-  /*  Card animations   */
+  /*  AddCardTo Methods   */
   /****************************************************************/
 
-  this.revertAnimationDuration = 500;
-  
-  this.newCardOpponent = function(pos) {
-    var $card = $('<div/>').attr({'class': 'faceDown cardSized'});
-    $('#' + pos + 'Hand').append($card);
-    this.reArrangeHand(pos);
+  this.addCardToMat = function(ctype,pos) {
+    $smallMat = $('#' + pos + 'SmallMat');
+    $largeMat = $('#' + pos + 'LargeMat');
+
+    smallStack = $smallMat.children('._c_'+ctype);
+    
+    if (smallStack.length == 0) {
+      smallCard = view.newMatCard(ctype);
+      card = this.newCard(ctype);
+
+      var $counterSmall = $('<div/>');
+      $counterSmall.addClass('stackCounter');
+      $counterSmall.text('1');
+      
+      $(smallCard).append($counterSmall);
+      
+      var $counterBig = $('<div/>');
+      $counterBig.addClass('stackCounter');
+      $counterBig.text('1');
+      
+      $(smallCard).append($counterSmall);
+      $(card).append($counterBig);
+
+      $smallMat.append(smallCard);
+      $largeMat.append(card);
+    }
+    else {
+      bigStack = $largeMat.children('._c_' + ctype);
+      
+      num = smallStack.children('.stackCounter').text();
+      
+      smallStack.children('.stackCounter').text(parseInt(num) + 1 + "");
+      bigStack.children('.stackCounter').text(parseInt(num) + 1 + "");
+    }
   }
 
-  this.addCardToHand = function(card) {
-    $('#playerHand').append(card);
-    this.reArrangeHand("player");
+  this.revertAnimationDuration = 500;
+  this.addCardToHand = function(pos,card) {
+    if (pos == "player") {
+      $('#playerHand').append(card);
+    }
+    else {
+      var $card = $('<div/>').attr({'class': 'faceDown cardSized'});
+      $('#' + pos + 'Hand').append($card);
+    }
+    this.reArrangeHand(pos);
   }
   
   this.reArrangeHand = function(pos)
@@ -800,14 +819,47 @@ function View() {
   
   this.addCardToDiscard = function(card,pos) {
     $($('#'+pos+'Discard').children()).remove();
-    card.css({top:-3,left:-3});
+    card.css({top:0,left:0});
+    card.draggable("disable");
     $('#'+pos+'Discard').append(card);
   }
   
-  this.cleanTableau = function() {
-    $($('#actionTableau').children()).remove('.card');
+  
+  /*********************/
+  /* Cleaning Methods */
+  /*********************/
+  this.cleanTableau = function(destination) {
+    cardsTableau = ($('#actionTableau').children('.card'));
+    this.reArrangeHand("tableau");
+    for (i=0; i < cardsTableau.length; i++) {
+      this.moveCard(["card",$(cardsTableau[i])],[destination,"discard"], cardsTableau[i]);
+    }
   }
   
+  this.cleanHand = function(source) {
+    if (source == "player")
+      cardClass = ".card";
+    else
+      cardClass = ".cardSized";
+    cardsHand = ($('#'+source+'Hand').children(cardClass));
+    for (i=0; i < cardsHand.length; i++) {
+      if ((source == "left") || (source == "right")) {
+        if (source == "left")
+          $(cardsHand[i]).css({"left":30});
+        else if (source == "right")
+          $(cardsHand[i]).css({"left":-30});
+      }
+      else if (source == "across")
+        $(cardsHand[i]).css({"top":0});
+        
+      $(cardsHand[i]).transition({"rotate":0});    
+      this.moveCard(["card",$(cardsHand[i])],[source,"discard"], cardsHand[i]);
+    }
+  }
+  
+  /*****************************/
+  /* Unused Methods (Future?)
+  /*****************************/
   this.rotateHand = function(cards) {
     
     numCards = cards.length;
@@ -836,8 +888,9 @@ function View() {
 
         angle+=stepAngle; 
       }
-    }    
+    }
   } // end rotateHand
+  
 } // end class View()
 
 // on load

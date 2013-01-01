@@ -211,21 +211,21 @@ img {
 
 #leftOpenClose {
   bottom: 0px;
-  right: 0px;
+  left: 0px;
 }
 
 #rightOpenClose {
-  top: 0px;
-  left: 0px;
+  bottom: 0px;
+  right: 0px;
 }
 
 #acrossOpenClose {
-  bottom: 0px;
-  left: 0px;
+  top: 0px;
+  right: 0px;
 }
 
 #playerOpenClose {
-  top: 0px;
+  bottom: 0px;
   right: 0px;
 }
 
