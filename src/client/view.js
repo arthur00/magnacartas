@@ -447,8 +447,6 @@ function View() {
         }
       }
     }
-    console.log(startPoint,endPoint,moveAnimation);
-    console.log($(card));
     $(card).animate(moveAnimation, 
         {
           duration: speed, 
