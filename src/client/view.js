@@ -653,6 +653,7 @@ function View() {
   /****************************************************************/
   /*  Div Animation effects (Buying/Mat)  */
   /****************************************************************/
+  
   this.showBuyingBoard = function(action) {
     var container = $('#buyingBoard');
     var small = $('#smallBuying');
