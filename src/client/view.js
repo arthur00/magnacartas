@@ -223,6 +223,10 @@ function View() {
     }
   }
   
+  this.deactivatePlayer = function(pos) {
+    $('#' + pos + 'Opponent').hide();
+  }
+  
   /****************************************************************/
   /* Set Piles */
   /****************************************************************/
@@ -840,8 +844,12 @@ function View() {
   }
   
   this.addCardToDiscard = function(card,pos) {
-    $($('#'+pos+'Discard').children()).remove();
-    card.css({top:0,left:0});
+    if (pos == "player")
+      classType = ".card";
+    else
+      classType = ".cardSized";
+    $($('#'+pos+'Discard').children(classType)).remove();
+    card.css({top:0,left:0,'z-index':0});
     card.draggable("disable");
     $('#'+pos+'Discard').append(card);
   }
