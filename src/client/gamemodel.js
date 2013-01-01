@@ -9,6 +9,12 @@ function GameModel(playerId) {
   this.table = new Array();
   this.numPlayers = null;
 
+  /**
+   * 
+   * player joins, leaves, game starts, ends
+   * 
+   */
+
   this.onConnectToGameServer = function() {
     GAMECOMM.sendJoinGame(self.myName)
   }
@@ -40,20 +46,18 @@ function GameModel(playerId) {
   // This indicates who is the first player,
   // and NOT the beginning of the first turn of startingPlayer.
   // Beginning and end of turns are indicated by endTurn.
-  // state = {'table': someTable,
+  // args = {'table': [player1, player2],
   // 'piles': [card1, card2, ...],
-  // 'startingPlayer': {'name': 'arthur'}}
   // 
-  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
+  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coins': 1}
   // card2 = {'name': 'Smithy', 'cost': 4, 'qty': 10, 'qtyLeft': 10,
   // 'desc': 'Draw 3 cards'}
-  this.gameStart = function(state) {
+  this.gameInit = function(args) {
     var pileNames = new Array()
-    for ( var i = 0; i < state.piles.length; i++) {
-      pileNames.push(state.piles[i].name)
+    for ( var i = 0; i < args.piles.length; i++) {
+      pileNames.push(args.piles[i].name)
     }
-    console.log('Game started. ' + state.startingPlayer.name + ' will start. '
-        + 'Piles available: ' + pileNames.join())
+    console.log('Game init. Piles available: ' + pileNames.join())
 
   }
 
@@ -64,12 +68,40 @@ function GameModel(playerId) {
     console.log(winner.name + ' won with ' + winner.score + ' points')
   }
 
+  /**
+   * 
+   * start turn cleanup phase end turn
+   * 
+   */
+
+  // A player starts his turn.
+  // args = {'player':{'name':'arthur'}, 'effect':{'actions':1,'buys':1}}
+  this.startPhase = function(args) {
+    var pname = args.player.name
+    if (pname == self.myName) {
+      console.log('Begin my turn')
+    } else {
+      console.log('Begin turn of ' + pname)
+    }
+  }
+
+  // A player starts his action phase.
+  // args = {'player':{'name':'arthur'}}
+  this.actionPhase = function(args) {
+    var pname = args.player.name
+    if (pname == self.myName) {
+      console.log('Begin my action phase')
+    } else {
+      console.log('Begin action phase of ' + pname)
+    }
+  }
+
   // The cleanup phase of a player starts.
   // args = {'player': {'name':'arthur'}, 'top':card1, 'num':6}
   // card1 = {'name': 'Copper', ...}
   // if Arthur's clean up phase results in discarding 6 cards
-  // (from tableau + hand), and the top card of his discard pile is a Copper
-  this.cleanup = function(args) {
+  // from tableau + hand, and the top card of his discard pile is a Copper
+  this.cleanupPhase = function(args) {
     var pname = args.player.name
     if (pname == self.myName) {
       console.log('I discard ' + args.num + ' cards. Top: ' + args.top.name)
@@ -79,81 +111,49 @@ function GameModel(playerId) {
     }
   }
 
-  // Someone's turn ended, and the next player's turn starts.
-  // args = {'prev':playerWhoseTurnIsOver, 'next':playerWhoseTurnStarts}
-  // !! During the first turn of the first player, there is no prev !!
-  // ! During the last turn (ie when the last pile is gone), there is no next !
-  this.endTurn = function(args) {
-    var msg = ''
-    if ('prev' in args) {
-      var pname = args.prev.name
-      if (pname == self.myName) {
-        msg += 'End of my turn.'
-      } else {
-        msg += 'End of ' + pname + '\'s turn.'
-      }
-    }
-    if ('next' in args) {
-      var pname = args.next.name
-      if (pname == self.myName) {
-        msg += ' Now is my turn.'
-      } else {
-        msg += ' Now is turn of ' + pname
-      }
-    }
-    console.log('-------------------------')
-    console.log(msg)
-
-  }
-
-  // A player's deck runs out and is replaced by his discard.
-  // Also called at game start when setting the initial deck.
-  // args = {'player': {'name': 'arthur'}, 'size': 10}
-  this.someoneResetDeck = function(args) {
+  // A player (can be me) gained resources (actions, buys, coins).
+  // args = {'player': {'name': 'arthur', 'resources': rsrc}
+  // rsrc = {'coins': 1, 'actions': 2, 'buys': 1}
+  this.gainResources = function(args) {
     var pname = args.player.name
+    var resources = args.resources
+    // compute list of bonuses
+    var bonuses = new Array()
+    for ( var resource in resources) {
+      bonuses.push('+' + resources[resource] + ' ' + resource)
+    }
+    // print
     if (pname == self.myName) {
-      console.log('I shuffle my deck (' + args.size + ' cards)')
+      console.log('I get ' + bonuses.join())
     } else {
-      console.log(pname + ' shuffles his deck (' + args.size + ' cards)')
+      console.log(pname + ' gets ' + bonuses.join())
     }
   }
 
-  // Someone placed a money card down to buy stuffs.
+  /**
+   * 
+   * play money card(s) buy
+   * 
+   */
+
+  // Someone placed money card(s) down to buy stuffs.
   // args = {'player': {'name': 'arthur'}, 'moneyCards': [card1, card2]}
   // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
   this.someonePlayMoney = function(args) {
     var pname = args.player.name
     var cnames = new Array()
     var coins = 0
-    for (var i = 0; i< args.moneyCards.length; i++) {
+    for ( var i = 0; i < args.moneyCards.length; i++) {
       cnames.push(args.moneyCards[i].name)
       coins += args.moneyCards[i].coins
     }
     if (pname == self.myName) {
-      console.log('I play ' + cnames.join() + ' and gain ' + coins + ' coin(s)')
+      console
+          .log('I play ' + cnames.join() + ' and gain ' + coins + ' coin(s)')
     } else {
       console.log(pname + ' plays ' + cnames.join() + ' and gains ' + coins
           + ' coin(s)')
     }
-  }
-
-  // I draw a card into my hand.
-  // args = {'cards': [card1, card2]}
-  // card1 = {'name' = '', 'cost': 1, 'fame': 0, 'desc': 'Draw 3 cards',
-  // 'qty': 10, 'qtyleft': 6}
-  this.drawCards = function(args) {
-    var cardNames = new Array()
-    for ( var i =0; i< args.cards.length; i++) {
-      cardNames.push(args.cards[i].name)
-    }
-    console.log('I draw ' + cardNames.join())
-  }
-
-  // Another player just drew N cards into his hand.
-  // This is just a notification from the server.
-  // args = {'player': {'name':'art'}, 'qty': 3}
-  this.otherDrawCards = function(args) {
-    console.log(args.player.name + ' draws ' + args.qty + ' cards.')
   }
 
   // A player just bought a card. CAN be myself.
@@ -169,6 +169,55 @@ function GameModel(playerId) {
     } else {
       console.log(pname + ' buys ' + cName + '. ' + qtyLeft
           + ' left in the pile.')
+    }
+  }
+
+  /**
+   * 
+   * draw cards reset deck
+   * 
+   */
+
+  // Someone (could be me) draws a card to his hand.
+  // TODO: also do draw a card from deck to discard pile
+  // args = {'cards': [card1, card2]}
+  // card1 = {'name' = '', 'cost': 1, 'fame': 0, 'desc': 'Draw 3 cards',
+  // 'qty': 10, 'qtyleft': 6}
+  this.drawCards = function(args) {
+    var pname = args.player.name
+    if (pname == self.myName) {
+      var cardNames = new Array()
+      for ( var i = 0; i < args.cards.length; i++) {
+        cardNames.push(args.cards[i].name)
+      }
+      console.log('I draw ' + cardNames.join())
+    } else {
+      console.log(pname + ' draws ' + args.qty + ' cards')
+    }
+  }
+
+  // A player's deck runs out and is replaced by his discard.
+  // Also called at game start when setting the initial deck.
+  // args = {'player': {'name': 'arthur'}, 'size': 10}
+  this.someoneResetDeck = function(args) {
+    var pname = args.player.name
+    if (pname == self.myName) {
+      console.log('I shuffle my deck (' + args.size + ' cards)')
+    } else {
+      console.log(pname + ' shuffles his deck (' + args.size + ' cards)')
+    }
+  }
+  
+  
+  // A player starts playing a card.
+  // args = {'player':{'name':''}, 'card':card}
+  this.startPlayCard = function(args) {
+    var pname = args.player.name
+    var cname = args.card.name
+    if (pname == self.myName) {
+      console.log('I play ' + cname)
+    } else {
+      console.log(pname + ' plays ' + cname)
     }
   }
 

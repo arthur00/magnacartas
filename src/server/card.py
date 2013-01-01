@@ -9,6 +9,7 @@ ie around 200, and create an instance of a Pile,
 where a Pile would store how many cards are left in it.
 """
 from logger import logger
+from server.resource import Resource
 
 class Card():
     name = ''
@@ -26,7 +27,7 @@ class Card():
             self._game = game
             if not sampler:
                 # __class__ is the highest parent, eg CopperCard, and not Card
-                self.__class__.qty_left -= 1
+                self.__class__.qty_left -= 1 # TODO: this is not working!!!
 
 
     def serialize(self):
@@ -46,7 +47,7 @@ class Card():
 
 class MoneyCard(Card):
     coins = 0 # 1 for copper, 3 for gold
-    
+
     def serialize(self):
         d = {'coins': self.coins}
         d.update(Card.serialize(self))
@@ -57,18 +58,18 @@ class CopperCard(MoneyCard):
     cost = 1
     coins = 1
     qty = 50
-    
+
 class SilverCard(MoneyCard):
     name = 'Silver'
     cost = 4
     coins = 2
     qty = 8
-    
+
 class GoldCard(MoneyCard):
     name = 'Gold'
     cost = 7
     coins = 3
-    qty = 8  
+    qty = 8
 
 
 
@@ -129,9 +130,9 @@ class CartographerCard(PirateCard):
     qty = 8
 
     def do_effect(self):
-        # TODO: the game should notify other players that I played this card
-        self._game.cur_player.drawcards(3)
-        self._game.cur_player.addbuys(1)        
+        self._game.cur_player.draw_cards(3)
+        self._game.cur_player.add_resources(Resource(buy=1))
+
 
 
 
@@ -140,11 +141,11 @@ class CartographerCard(PirateCard):
 def pick_piles(num):
     """ Return a dictionary {'card.name': card_class} """
     # TODO: should draw action pirate piles randomly
-    samplers = [CopperCard, SilverCard, GoldCard, 
+    samplers = [CopperCard, SilverCard, GoldCard,
                 CommodoreCard, AdmiralCard,
                 CartographerCard]
     # reset the quantities left
-    for card_class in samplers: 
+    for card_class in samplers:
         card_class.qty_left = card_class.qty
     piles = {}
     for card in samplers:

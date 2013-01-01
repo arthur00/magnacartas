@@ -27,15 +27,17 @@ function GameCommWebSocket() {
     'welcome' : GAMEMODEL.welcome,
     'playerJoined' : GAMEMODEL.playerJoined,
     'playerLeft' : GAMEMODEL.playerLeft,
-    'gameStart' : GAMEMODEL.gameStart,
+    'gameInit' : GAMEMODEL.gameInit,
     'gameOver' : GAMEMODEL.gameOver,
-    'cleanup' : GAMEMODEL.cleanup,
-    'endTurn' : GAMEMODEL.endTurn,
+    'startPhase': GAMEMODEL.startPhase,
+    'actionPhase': GAMEMODEL.actionPhase,
+    'cleanupPhase' : GAMEMODEL.cleanupPhase,
+    'gainResources' : GAMEMODEL.gainResources,
     'resetDeck' : GAMEMODEL.someoneResetDeck,
     'drawCards' : GAMEMODEL.drawCards,
-    'otherDrawCards' : GAMEMODEL.otherDrawCards,
     'playMoney' : GAMEMODEL.someonePlayMoney,
-    'buy' : GAMEMODEL.someoneBuy
+    'buy' : GAMEMODEL.someoneBuy,
+    'startPlayCard': GAMEMODEL.startPlayCard
   }
 
   // receive handler
