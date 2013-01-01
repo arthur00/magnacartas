@@ -91,7 +91,7 @@ function View() {
       
       $('#buyingBoard').click(
 		  function() { 
-              view.showBuyingBoard("open");
+              view.showBuyingBoard(_open);
               $('#buyingClose').show();
 	   });
 	   
@@ -99,15 +99,15 @@ function View() {
       function(e) { 
           e.stopPropagation();
           $('#buyingClose').hide();
-          view.showBuyingBoard("close");
+          view.showBuyingBoard(_close);
       });
 
       $('.openclose').click(
 		  function(e) {
 		          if ($(this).css("rotate") == "45deg")
-                view.SlidePanels($($(this).parent()),"open");
+                view.SlidePanels($($(this).parent()),_open);
               else
-                view.SlidePanels($(this).parent(),"close");
+                view.SlidePanels($(this).parent(),_close);
 	   });
 
    
@@ -149,6 +149,12 @@ function View() {
     });
     //$('.discard').droppable("disable");
     
+    $('#playerDeck').droppable({
+      drop : function(event, ui) {
+        model.dropDeck($(this), ui.draggable);
+      }
+    });
+    
     
     /*******************************************/
     /* Hacks */
@@ -156,15 +162,15 @@ function View() {
     // Hack to add cards, should be removed on deployment
     $('#playerDiscard').click(
         function() {
-            view.addCardToHand("left");
-            view.addCardToHand("right");
-            view.addCardToHand("across");
+            view.addCardToHand(_left);
+            view.addCardToHand(_right);
+            view.addCardToHand(_across);
     });
     
     // wire the logic in deck drawing
     $('#playerDeck').click(function() {
       var $card = view.newCard('blackBeard');
-      view.addCardToHand("player", $card);
+      view.addCardToHand(_player, $card);
     });
     
   } // End init
@@ -203,19 +209,34 @@ function View() {
   /****************************************************************/
   
   this.activateDroppable = function(area, method) {
-    if (area[1] == "hand")
+    if (area[1] == _hand)
       $('#'+area[0]+'Hand').droppable("enable");
-    else if (area[1] == "mat")
+    else if (area[1] == _mat)
       $('#'+area[0]+'Mat').droppable("enable");
-    else if (area[1] == "deck")
+    else if (area[1] == _deck)
       $('#'+area[0]+'Deck').droppable("enable");
-    else if (area[1] == "discard")
+    else if (area[1] == _discard)
       $('#'+area[0]+'Discard').droppable("enable");
     
     if (method) {
       // TODO: Replace drop and other methods for the area
     }
-      
+  }
+  
+  /****************************************************************/
+  /* Set Piles */
+  /****************************************************************/
+  
+  this.setDeck = function(pos,value) {
+    var deck = $('#'+ pos + _deck);
+    deck.children('.stackCounter').text(value+"");
+  }
+  
+  this.setDiscard = function(pos,value,topCardType) {
+    var discard = $('#'+ pos + _discard);
+    discard.children('.stackCounter').text(value+"");
+    var card = this.newCard(topCardType);
+    this.addCardToDiscard(card,pos);
   }
   
   /****************************************************************/
@@ -223,10 +244,10 @@ function View() {
   /****************************************************************/
   
   // Coordinates comes from game-coordinates.js.
-  // Source: tuple [source player, area]. E.g. ["player","hand"], ["left","mat"], ["right","discard"].
-  //         if card is the source:  ["card",card]
+  // Source: tuple [source player, area]. E.g. [_player,_hand], [_left,_mat], [_right,_discard].
+  //         if card is the source:  [_card,card]
   this.moveCard = function(source, destination, ctype, afterMoveAnimation) {
-    startPoint = coordinates[source]
+    //var startPoint = coordinates[source]
     var animEasing="easeInOutExpo";
 		var speed=900;
 		var sourceSize="normal";
@@ -235,20 +256,20 @@ function View() {
     var card = null;
     var startPoint = null;
     // If source is a card, no need to create one to move.
-    if (source[0] == "card") {
+    if (source[0] == _card) {
         card = source[1];
     }
     else {
       startPoint = coordinates[source[0]][source[1]];
       // Am I moving a card from someone's hand? If so, actually remove it from the player's hand. 
-      if (source[1] == "hand") {
-        if (source[0] == "player") {
+      if (source[1] == _hand) {
+        if (source[0] == _player) {
           card = $('#playerHand ._c_'+ctype).get(0);
           if (!card)
             throw "No card in hand!";
           startPoint = null;
         }
-        else if (source[0] == "left" || source[0] == "right" || source[0] == "across") {
+        else if (source[0] == _left || source[0] == _right || source[0] == _across) {
             card = $('#' + source[0] + 'Hand').children().get(0);
             if (ctype) {
               startPoint = [$(card).offset().left, $(card).offset().top];
@@ -259,7 +280,7 @@ function View() {
       }
       
       // Moving from a player's mat. Tricky, since I need to remove the card from his mat.
-      else if (source[1] == "mat") {
+      else if (source[1] == _mat) {
         var largeStack = $('#'+source[0]+'LargeMat').children('._c_' + ctype);
         var smallStack = $('#'+source[0]+'SmallMat').children('._c_' + ctype);
         var num = smallStack.children('.stackCounter').text();
@@ -277,10 +298,10 @@ function View() {
         }
       }
       // Moving from a player's deck. Common case of drawing for example
-      else if (source[1] == "deck") {
+      else if (source[1] == _deck) {
         sourceSize = "small";
         if (!ctype) { // facedown movement
-          if (source[0] == "player") {
+          if (source[0] == _player) {
             card = this.newFacedownCard("normal");
           }
           else { /* left, across, right */
@@ -288,7 +309,7 @@ function View() {
           }
         }
         else {
-          if (source[0] == "player") {
+          if (source[0] == _player) {
             card = this.newCard(ctype);
           }
           else {
@@ -297,7 +318,7 @@ function View() {
         }
       }
       // Moving from a player's discard
-      else if (source[1] == "discard") {
+      else if (source[1] == _discard) {
         sourceSize = "small";      
         throw "Discard as a source not yet supported."
         // TBD: Do we need this ever? Except when reshuffling, but that should be separate..      
@@ -323,18 +344,18 @@ function View() {
     // afterMoveAnimation is used to customize behavior after moving. If not specified,
     // default behavior kicks in, adding card to hand, mat, deck, or discard.
     if (!afterMoveAnimation) {
-      if (destination[1] == "mat") {
+      if (destination[1] == _mat) {
         afterMoveAnimation = function(_card_) {
           _card_.remove();
           view.addCardToMat(ctype,destination[0]);
         }
       }
       // Add card to hand of the destination player
-      else if (destination[1] == "hand") {
-        if (destination[0] == "player") {
+      else if (destination[1] == _hand) {
+        if (destination[0] == _player) {
           afterMoveAnimation = function(_card_) {
             _card_.remove();
-            view.addCardToHand("player",view.newCard(ctype));
+            view.addCardToHand(_player,view.newCard(ctype));
           }
         }
         else {
@@ -344,15 +365,15 @@ function View() {
           }
         }
       }
-      else if (destination[1] == "deck") {
-        if (destination[0] != "player")
+      else if (destination[1] == _deck) {
+        if (destination[0] != _player)
           destinationSize = "small";
         afterMoveAnimation = function(_card_) {
             _card_.remove();
         }  
       }
-      else if (destination[1] == "discard") {
-        if (destination[0] != "player")
+      else if (destination[1] == _discard) {
+        if (destination[0] != _player)
             destinationSize = "small";
         afterMoveAnimation = function(_card_) {
         view.addCardToDiscard(_card_,destination[0]);
@@ -422,7 +443,8 @@ function View() {
         }
       }
     }
-    
+    console.log(startPoint,endPoint,moveAnimation);
+    console.log($(card));
     $(card).animate(moveAnimation, 
         {
           duration: speed, 
@@ -437,7 +459,7 @@ function View() {
         });
 
     // Reorganize hand of player, if card came from someone's hand.
-    if (source[1] == "hand")
+    if (source[1] == _hand)
       this.reArrangeHand(source[0]);
   } // end of moveCard
   
@@ -475,7 +497,7 @@ function View() {
       var $card = this.newCard(ctype);
       $card.draggable('disable');
       $card.dblclick(function() {
-        view.buyCard(ctype,["player","discard"]);
+        view.buyCard(ctype,[_player,_discard]);
       });
       leftPos = pos[1];
       topPos = pos[0];
@@ -511,12 +533,12 @@ function View() {
     newcard.css({position: postype, 'top':position.top, 'left':position.left, 'z-index':zlayer3+1});
      
     
-    if (destination[0] == "player") {
-      this.moveCard(["card",newcard],["player",destination[1]],ctype);
+    if (destination[0] == _player) {
+      this.moveCard([_card,newcard],[_player,destination[1]],ctype);
     }
     else {
-      this.moveCard(["card",newcard],[destination[0],destination[1]],ctype);
-      this.showBuyingBoard("close");
+      this.moveCard([_card,newcard],[destination[0],destination[1]],ctype);
+      this.showBuyingBoard(_close);
     }
   } 
   
@@ -605,11 +627,11 @@ function View() {
       revert : function(socketObj) {
         if(socketObj === false)
         {
-          setTimeout(function() {view.reArrangeHand("player")}, view.revertAnimationDuration);
+          setTimeout(function() {view.reArrangeHand(_player)}, view.revertAnimationDuration);
           return true;
         }
         else {
-          setTimeout(function() {view.reArrangeHand("player")});
+          setTimeout(function() {view.reArrangeHand(_player)});
           return false;
         }
       },
@@ -636,7 +658,7 @@ function View() {
 		var openAnim = { width: 800, height: 730, top: 10, left:112 };
 		var closeAnim = { width: 300, height: 80, top: 160, left:362 };
 		
-    if (action == "open") {
+    if (action == _open) {
       this.disableOtherEvents(container);
       small.hide();		
       container.css({'z-index':zlayer3});
@@ -648,7 +670,7 @@ function View() {
 	       	$(closeButton).css({'z-index':zlayer3})
 			});
     }
-    else if (action == "close") {
+    else if (action == _close) {
         large.hide();
         this.enableOtherEvents(container);
 		    $(closeButton).css({'z-index':zlayer0});
@@ -687,7 +709,7 @@ function View() {
 		else {
   		    return false;
 		}
-		if(action=="close") {
+		if(action==_close) {
 		  this.enableOtherEvents(container);
 		  $outer_container.children('.largeMat').hide();	
       $outer_container.children('.smallMat').show();
@@ -755,7 +777,7 @@ function View() {
 
   this.revertAnimationDuration = 500;
   this.addCardToHand = function(pos,card) {
-    if (pos == "player") {
+    if (pos == _player) {
       $('#playerHand').append(card);
     }
     else {
@@ -769,36 +791,36 @@ function View() {
   {
     var curTop = 0;
     var curLeft = 0;
-    if (pos == "tableau")
+    if (pos == _tableau)
       var cards = $('#actionTableau').children(".card");
-    else if (pos == "player") 
+    else if (pos == _player) 
       var cards = $('#' + pos + 'Hand').children(".card");
     else 
       var cards = $('#' + pos + 'Hand').children(".faceDown");
-    if (pos == "player" || pos == "tableau") 
+    if (pos == _player || pos == _tableau) 
       var startZ = zlayer2;
     else
       var startZ = zlayer1;
     
-    if (pos =="player" || pos == "tableau") {
+    if (pos ==_player || pos == _tableau) {
         for ( i = 0; i < cards.length; i++ ) {
           $(cards[i]).css({left:curLeft, top:0, position:'absolute', 'z-index':startZ++});
           curLeft+=30;
         }
     }
-    else if (pos == "left") {
+    else if (pos == _left) {
         for ( i = 0; i < cards.length; i++ ) {
           $(cards[i]).css({rotate:90, top:curTop, left:-80, position:'absolute', 'z-index':startZ++});
           curTop+=30;
         }
     }
-    else if (pos == "right") {
+    else if (pos == _right) {
         for ( i = 0; i < cards.length; i++ ) {
           $(cards[i]).css({rotate:-90, top:curTop, right:-80, position:'absolute', 'z-index':startZ++});
           curTop+=30;
         }
     }
-    else if (pos == "across"){
+    else if (pos == _across){
         for ( i = 0; i < cards.length; i++ ) {
           $(cards[i]).css({rotate:180, left:curLeft, top:-110, position:'absolute', 'z-index':startZ++});
           curLeft+=30;
@@ -813,7 +835,7 @@ function View() {
     cards = $('#actionTableau').children();
     
     if (cards.length > 3) {
-      this.reArrangeHand("tableau");
+      this.reArrangeHand(_tableau);
     }
   }
   
@@ -830,30 +852,30 @@ function View() {
   /*********************/
   this.cleanTableau = function(destination) {
     cardsTableau = ($('#actionTableau').children('.card'));
-    this.reArrangeHand("tableau");
+    this.reArrangeHand(_tableau);
     for (i=0; i < cardsTableau.length; i++) {
-      this.moveCard(["card",$(cardsTableau[i])],[destination,"discard"], cardsTableau[i]);
+      this.moveCard([_card,$(cardsTableau[i])],[destination,_discard], cardsTableau[i]);
     }
   }
   
   this.cleanHand = function(source) {
-    if (source == "player")
+    if (source == _player)
       cardClass = ".card";
     else
       cardClass = ".cardSized";
     cardsHand = ($('#'+source+'Hand').children(cardClass));
     for (i=0; i < cardsHand.length; i++) {
-      if ((source == "left") || (source == "right")) {
-        if (source == "left")
-          $(cardsHand[i]).css({"left":30});
-        else if (source == "right")
-          $(cardsHand[i]).css({"left":-30});
+      if ((source == _left) || (source == _right)) {
+        if (source == _left)
+          $(cardsHand[i]).css({_left:30});
+        else if (source == _right)
+          $(cardsHand[i]).css({_left:-30});
       }
-      else if (source == "across")
+      else if (source == _across)
         $(cardsHand[i]).css({"top":0});
         
       $(cardsHand[i]).transition({"rotate":0});    
-      this.moveCard(["card",$(cardsHand[i])],[source,"discard"], cardsHand[i]);
+      this.moveCard([_card,$(cardsHand[i])],[source,_discard], cardsHand[i]);
     }
   }
   

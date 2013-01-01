@@ -4,28 +4,28 @@
 function Coordinates() {
   coordinates = {
       'player' : {
-        'hand' : [512,610],
-        'mat' : [512,610-160],
-        'deck' : [$('#playerDeck').offset().left, $('#playerDeck').offset().top],
-        'discard' : [$('#playerDiscard').offset().left, $('#playerDiscard').offset().top]
+        'Hand' : [512,610],
+        'Mat' : [512,610-160],
+        'Deck' : [$('#playerDeck').offset().left, $('#playerDeck').offset().top],
+        'Discard' : [$('#playerDiscard').offset().left, $('#playerDiscard').offset().top]
       },
       'left' : {
-        'hand' : [50,240],
-        'mat' : [50+80,240],
-        'deck' : [$('#leftDeck').offset().left, $('#leftDeck').offset().top],
-        'discard' : [$('#leftDiscard').offset().left, $('#leftDiscard').offset().top]
+        'Hand' : [50,240],
+        'Mat' : [50+80,240],
+        'Deck' : [$('#leftDeck').offset().left, $('#leftDeck').offset().top],
+        'Discard' : [$('#leftDiscard').offset().left, $('#leftDiscard').offset().top]
       },
       'right' : {
-        'hand' : [1024-50,240],
-        'mat' : [1024-50-80,240],
-        'deck' : [$('#rightDeck').offset().left, $('#rightDeck').offset().top],
-        'discard' : [$('#rightDiscard').offset().left, $('#rightDiscard').offset().top]
+        'Hand' : [1024-50,240],
+        'Mat' : [1024-50-80,240],
+        'Deck' : [$('#rightDeck').offset().left, $('#rightDeck').offset().top],
+        'Discard' : [$('#rightDiscard').offset().left, $('#rightDiscard').offset().top]
       },
       'across' : {
-        'hand' : [512,20],
-        'mat' : [512,100],
-        'deck' : [$('#acrossDeck').offset().left, $('#acrossDeck').offset().top],
-        'discard' : [$('#acrossDiscard').offset().left, $('#acrossDiscard').offset().top]
+        'Jand' : [512,20],
+        'Mat' : [512,100],
+        'Deck' : [$('#acrossDeck').offset().left, $('#acrossDeck').offset().top],
+        'Discard' : [$('#acrossDiscard').offset().left, $('#acrossDiscard').offset().top]
       },
       'buying' : {
         'buying' : [$('#smallBuying').offset().left, $('#smallBuying').offset().top]

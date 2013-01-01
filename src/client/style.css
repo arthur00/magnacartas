@@ -152,15 +152,27 @@ img {
   position: relative;
 }
 
+#playerDeck .stackCounter {
+  width:20px;
+  height:20px;
+  font-size:16px;
+}
+
+#playerDiscard .stackCounter {
+  width:20px;
+  height:20px;
+  font-size:16px;
+}
+
 .stackCounter {
   background-color: aliceblue;
   position: absolute;
   top: 0;
   left: 0;
   display: block;
-  font-size: 10px;
-  width: 12px;
-  height: 12px;
+  font-size: 12px;
+  width: 15px;
+  height: 15px;
   text-align: center;
   font-weight: bold;
   color: cornflowerblue;
@@ -201,8 +213,8 @@ img {
 
 .openclose {
   position: absolute;
-  height: 30px;
-  width: 30px;
+  height: 25px;
+  width: 25px;
   
   background-repeat:no-repeat;
   background-image:url('img/xbutton.png');
@@ -304,8 +316,8 @@ img {
   }
 
   /* this margin should equal the border of #playerDiscard*/
-  #playerDiscard .card {
-    margin: -2px;
+    #playerDiscard .card {
+      margin: -2px;
     }
 
   #playerMat {
