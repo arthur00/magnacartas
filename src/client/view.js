@@ -2,9 +2,6 @@
  * A one-shot prototype to test a card game UI without using canvas. 
  */
 
-view = new View();
-model = new Model(view);
-
 normalCardSize = {height:160, width:100};
 smallCardSize = {height:80, width:50};
 
@@ -13,27 +10,6 @@ minorRadius = 100;
 majorRadius = 600;
 radius = 100;
 
-  // model data
-  var cardData = {
-    'anneBonny' : {
-      'name' : 'Anne Bonny',
-      'cost' : 5,
-      'img' : 'anne_bonny.jpg',
-      'effect' : '+3 cards'
-    },
-    'blackBart' : {
-      'name' : 'Black Bart',
-      'cost' : 4,
-      'img' : 'black_bart.jpg',
-      'effect' : '+1 card<br/>+1 buy'
-    },
-    'blackBeard' : {
-      'name' : 'Black Beard',
-      'cost' : 3,
-      'img' : 'black_beard.jpg',
-      'effect' : '+1 coin'
-    }
-  }
 
   // hack to keep cards on top of each others when clicked or dragged
   var curZ = 1;
@@ -63,7 +39,7 @@ function calculateGrid(container,spacing) {
 }
 
 
-function View() {
+function GameView() {
   /****************************************************************/
   /* View Init */
   /****************************************************************/
@@ -72,108 +48,109 @@ function View() {
   var zlayer2 = 2000;
   var zlayer3 = 3000;
   
-  this.init = function() {
-      // Sets up the grid spaces for placing buy cards in the buying board
-      buyingGrid = calculateGrid($('#largeBuying'), 10);
+//  this.init = function() {
 
-      $('#buyingClose').hide();
-      $('#largeBuying').hide();
-      $('#hiddenLayer').hide();
-      
-      $('.openclose').css({rotate:45, 'z-index':zlayer1});
-      
-      $('.largeMat').hide();
+    // Sets up the grid spaces for placing buy cards in the buying board
+    buyingGrid = calculateGrid($('#largeBuying'), 10);
 
-      
-      /***************************************/
-      /* Clickables */
-      /***************************************/
-      
-      $('#buyingBoard').click(
-		  function() { 
-              view.showBuyingBoard(_open);
-              $('#buyingClose').show();
-	   });
-	   
-      $('#buyingClose').click(
-      function(e) { 
-          e.stopPropagation();
-          $('#buyingClose').hide();
-          view.showBuyingBoard(_close);
-      });
+    $('#buyingClose').hide();
+    $('#largeBuying').hide();
+    $('#hiddenLayer').hide();
+    
+    $('.openclose').css({rotate:45, 'z-index':zlayer1});
+    
+    $('.largeMat').hide();
 
-      $('.openclose').click(
-		  function(e) {
-		          if ($(this).css("rotate") == "45deg")
-                view.SlidePanels($($(this).parent()),_open);
-              else
-                view.SlidePanels($(this).parent(),_close);
-	   });
-
+    
+    /***************************************/
+    /* Clickables */
+    /***************************************/
+    
+    $('#buyingBoard').click(
+	  function() { 
+            GAMEVIEW.showBuyingBoard(_open);
+            $('#buyingClose').show();
+   });
    
-    
-    /***************************************/
-    /* Droppables */
-    /***************************************/
-    
-    $('#actionTableau').droppable({
-      tolerance : "pointer",
-      drop : function(event, ui) {
-        model.dropActionTableau(ui.draggable);
-        $(this).effect('highlight');
-      }
+    $('#buyingClose').click(
+    function(e) { 
+        e.stopPropagation();
+        $('#buyingClose').hide();
+        GAMEVIEW.showBuyingBoard(_close);
     });
-    //$('#actionTableau').droppable("disable");
+
+    $('.openclose').click(
+	  function(e) {
+	          if ($(this).css("rotate") == "45deg")
+              GAMEVIEW.SlidePanels($($(this).parent()),_open);
+            else
+              GAMEVIEW.SlidePanels($(this).parent(),_close);
+   });
+
+ 
+  
+  /***************************************/
+  /* Droppables */
+  /***************************************/
+  
+  $('#actionTableau').droppable({
+    tolerance : "pointer",
+    drop : function(event, ui) {
+      GAMEMODEL.dropActionTableau(ui.draggable);
+      $(this).effect('highlight');
+    }
+  });
+  //$('#actionTableau').droppable("disable");
+  
+  $('.handArea').droppable({
+    tolerance : "pointer",
+    drop : function(event, ui) {
+      GAMEMODEL.dropHand($(this),ui.draggable);
+    }
+  });
+  //$('.handArea').droppable("disable");
+  
+  $('.mat').droppable({
+    tolerance: "pointer",
+    drop : function(event,ui) {
+      GAMEMODEL.dropMat($(this),ui.draggable);
+    }
+  });
+  //$('.mat').droppable("disable");
+  
+  
+  $('#playerDiscard').droppable({
+    drop : function(event, ui) {
+      GAMEMODEL.dropDiscard($(this), ui.draggable);
+    }
+  });
+  //$('.discard').droppable("disable");
+  
+  $('#playerDeck').droppable({
+    drop : function(event, ui) {
+      GAMEMODEL.dropDeck($(this), ui.draggable);
+    }
+  });
+  
+  
+  /*******************************************/
+  /* Hacks */
+  /*******************************************/
+  // Hack to add cards, should be removed on deployment
+  $('#playerDiscard').click(
+      function() {
+          GAMEVIEW.addCardToHand(_left);
+          GAMEVIEW.addCardToHand(_right);
+          GAMEVIEW.addCardToHand(_across);
+  });
+  
+  // wire the logic in deck drawing
+  $('#playerDeck').click(function() {
+    var $card = GAMEVIEW.newCard('blackBeard');
+    GAMEVIEW.addCardToHand(_player, $card);
+  });
     
-    $('.handArea').droppable({
-      tolerance : "pointer",
-      drop : function(event, ui) {
-        model.dropHand($(this),ui.draggable);
-      }
-    });
-    //$('.handArea').droppable("disable");
-    
-    $('.mat').droppable({
-      tolerance: "pointer",
-      drop : function(event,ui) {
-        model.dropMat($(this),ui.draggable);
-      }
-    });
-    //$('.mat').droppable("disable");
-    
-    
-    $('#playerDiscard').droppable({
-      drop : function(event, ui) {
-        model.dropDiscard($(this), ui.draggable);
-      }
-    });
-    //$('.discard').droppable("disable");
-    
-    $('#playerDeck').droppable({
-      drop : function(event, ui) {
-        model.dropDeck($(this), ui.draggable);
-      }
-    });
-    
-    
-    /*******************************************/
-    /* Hacks */
-    /*******************************************/
-    // Hack to add cards, should be removed on deployment
-    $('#playerDiscard').click(
-        function() {
-            view.addCardToHand(_left);
-            view.addCardToHand(_right);
-            view.addCardToHand(_across);
-    });
-    
-    // wire the logic in deck drawing
-    $('#playerDeck').click(function() {
-      var $card = view.newCard('blackBeard');
-      view.addCardToHand(_player, $card);
-    });
-    
-  } // End init
+  //} // End init
   
   this.disableOtherEvents = function(container) {
     $('#gameBoard').css({'pointer-events':'none'});
@@ -278,7 +255,7 @@ function View() {
             if (ctype) {
               startPoint = [$(card).offset().left, $(card).offset().top];
               $(card).remove();
-              card = view.newCard(ctype);
+              card = GAMEVIEW.newCard(ctype);
             }
          }
       }
@@ -351,7 +328,7 @@ function View() {
       if (destination[1] == _mat) {
         afterMoveAnimation = function(_card_) {
           _card_.remove();
-          view.addCardToMat(ctype,destination[0]);
+          GAMEVIEW.addCardToMat(ctype,destination[0]);
         }
       }
       // Add card to hand of the destination player
@@ -359,12 +336,12 @@ function View() {
         if (destination[0] == _player) {
           afterMoveAnimation = function(_card_) {
             _card_.remove();
-            view.addCardToHand(_player,view.newCard(ctype));
+            GAMEVIEW.addCardToHand(_player,GAMEVIEW.newCard(ctype));
           }
         }
         else {
           afterMoveAnimation = function(_card_) {
-            view.addCardToHand(destination[0]);
+            GAMEVIEW.addCardToHand(destination[0]);
             _card_.remove();
           }
         }
@@ -380,12 +357,12 @@ function View() {
         if (destination[0] != _player)
             destinationSize = "small";
         afterMoveAnimation = function(_card_) {
-        view.addCardToDiscard(_card_,destination[0]);
+        GAMEVIEW.addCardToDiscard(_card_,destination[0]);
         }          
       }
       else if (destination[1] == "buying") {
         afterMoveAnimation = function(_card_) {
-          view.addBuyingStack(ctype,1);
+          GAMEVIEW.addBuyingStack(ctype,1);
           _card_.remove();
         }
       }
@@ -499,7 +476,7 @@ function View() {
       var $card = this.newCard(ctype);
       $card.draggable('disable');
       $card.dblclick(function() {
-        view.buyCard(ctype,[_player,_discard]);
+        GAMEVIEW.buyCard(ctype,[_player,_discard]);
       });
       leftPos = pos[1];
       topPos = pos[0];
@@ -549,7 +526,7 @@ function View() {
   /****************************************************************/
   
   this.newMatCard = function(ctype) {
-    var c = cardData[ctype];
+    var c = GAMEMODEL.cardData[ctype];
     var $card = $('<div/>');
     $card.addClass('smallCard _c_'+ctype);
     var $img = $('<img/>').attr({
@@ -603,7 +580,7 @@ function View() {
   // Creates a new card of ctype.
   this.newCard = function(ctype) {
 
-    var c = cardData[ctype];
+    var c = GAMEMODEL.cardData[ctype];
     var $img = $('<img/>').attr({
       src : 'img/' + c.img
     });
@@ -624,24 +601,24 @@ function View() {
     $card.draggable({
       start : function() {
         $(this).css({rotate:'', x:'', y:'', transform:''});
-        model.startDraggingCard($(this));
+        GAMEMODEL.startDraggingCard($(this));
       },
       stop : function() {
         $(this).css({rotate:'', x:'', y:'', transform:''});
-        model.stopDraggingCard($(this));
+        GAMEMODEL.stopDraggingCard($(this));
       },
       revert : function(socketObj) {
         if(socketObj === false)
         {
-          setTimeout(function() {view.reArrangeHand(_player)}, view.revertAnimationDuration);
+          setTimeout(function() {GAMEVIEW.reArrangeHand(_player)}, GAMEVIEW.revertAnimationDuration);
           return true;
         }
         else {
-          setTimeout(function() {view.reArrangeHand(_player)});
+          setTimeout(function() {GAMEVIEW.reArrangeHand(_player)});
           return false;
         }
       },
-      revertDuration: view.revertAnimationDuration,
+      revertDuration: GAMEVIEW.revertAnimationDuration,
       //containment : '#gameBoard',
       stack: '.card',
       opacity: 0.5,
@@ -753,7 +730,7 @@ function View() {
     smallStack = $smallMat.children('._c_'+ctype);
     
     if (smallStack.length == 0) {
-      smallCard = view.newMatCard(ctype);
+      smallCard = GAMEVIEW.newMatCard(ctype);
       card = this.newCard(ctype);
 
       var $counterSmall = $('<div/>');
@@ -927,6 +904,6 @@ function View() {
 } // end class View()
 
 // on load
-$(function() {
-  view.init();
-})
+//$(function() {
+//  GAMEVIEW.init();
+//})
