@@ -628,6 +628,10 @@ function View() {
         $(this).css({rotate:'', x:'', y:'', transform:''});
         model.startDraggingCard($(this));
       },
+      stop : function() {
+        $(this).css({rotate:'', x:'', y:'', transform:''});
+        model.stopDraggingCard($(this));
+      },
       revert : function(socketObj) {
         if(socketObj === false)
         {

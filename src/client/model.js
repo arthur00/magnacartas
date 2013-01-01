@@ -83,6 +83,12 @@ function Model(view) {
   /*********************************************/
   this.startDraggingCard = function(card) {
     ctype = this.getCtypeFromCard(card);
+    // Turn on/off droppables
+  }
+  
+  this.stopDraggingCard = function(card) {
+    // Fires before the droppable event! Nice.. 
+    // http://stackoverflow.com/questions/8092771/jquery-drag-and-drop-checking-for-a-drop-outside-a-droppable
   }
   
   // Normal drop in hand. Adds the card to the player's hand.
