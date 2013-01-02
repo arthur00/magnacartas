@@ -22,13 +22,14 @@ function Coordinates() {
         'Discard' : [$('#rightDiscard').offset().left, $('#rightDiscard').offset().top]
       },
       'across' : {
-        'Jand' : [512,20],
+        'Hand' : [512,20],
         'Mat' : [512,100],
         'Deck' : [$('#acrossDeck').offset().left, $('#acrossDeck').offset().top],
         'Discard' : [$('#acrossDiscard').offset().left, $('#acrossDiscard').offset().top]
       },
-      'buying' : {
-        'buying' : [$('#smallBuying').offset().left, $('#smallBuying').offset().top]
+      'table' : {
+        'buying' : [$('#smallBuying').offset().left, $('#smallBuying').offset().top],
+        'tableau' : [$('#actionTableau').offset().left, $('#actionTableau').offset().top]
       }
   }
 }

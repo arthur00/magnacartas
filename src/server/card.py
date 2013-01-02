@@ -16,6 +16,8 @@ class Card():
     cost = 0 # 1 for copper, 7 for gold
     qty = 0 # how many cards can be bought in the pile, at game start
     qty_left = 0 # how many cards are left to buy
+    img = 'img/william_kidd.jpg'
+
 
     def __init__(self, game, sampler=False):
         """ When created, a card decreases the number of cards left on the pile. 
@@ -34,7 +36,8 @@ class Card():
         d = {'name': self.name,
              'cost': self.cost,
              'qty': self.qty,
-             'qtyLeft': self.qty_left
+             'qtyLeft': self.qty_left,
+             'img': self.img
              }
         return d
 
@@ -127,7 +130,7 @@ class CartographerCard(PirateCard):
     fame = 3
     draws = 3
     buys = 1
-    qty = 8
+    qty = 30
 
     def do_effect(self):
         self._game.cur_player.draw_cards(3)

@@ -402,6 +402,7 @@ class Player():
                 logger.info('%s plays %s' % (self.name, card_name))
                 self._game.bc_start_play_card(self, handcard)
                 handcard.do_effect()
+                self._game.bc_end_play_card(self, handcard)
             else: # no such card in hand
                 logger.error('Player %s ' % self.name
                              + ' wants to play card %s' % card_name
@@ -419,5 +420,14 @@ class Player():
                 'card': card.serialize()
                 }
         self.send('startPlayCard', data)
+        
+        
+    def ntf_end_play_card(self, player, card):
+        """ A card is done with its effects.
+        """
+        data = {'player': player.serialize(),
+                'card': card.serialize()
+                }
+        self.send('endPlayCard', data)
         
 

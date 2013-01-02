@@ -91,7 +91,7 @@ class PirateGame():
             cur_player.ntf_playerleft(self.table, player)
         if len(self.table) == 1:
             last_player = self.table[0]
-            self.ntf_gameover(last_player)
+            self.bc_gameover(last_player)
 
 
 
@@ -111,8 +111,8 @@ class PirateGame():
 
         # each player prepares his hand and deck
         for player in self.table:
-            deck = [CopperCard(self) for _ in range(7)]
-            deck += [CartographerCard(self) for _ in range(3)]
+            deck = [CopperCard(self) for _ in range(4)]
+            deck += [CartographerCard(self) for _ in range(6)]
             player.reset_deck(deck)
             player.draw_hand()
 
@@ -240,6 +240,11 @@ class PirateGame():
         """ Notify all players that a player starts playing a card. """
         for p in self.table:
             p.ntf_start_play_card(player, card)
+        
+    def bc_end_play_card(self, player, card):
+        """ Notify all players that a card is done with its effects. """
+        for p in self.table:
+            p.ntf_end_play_card(player, card)
         
         
         

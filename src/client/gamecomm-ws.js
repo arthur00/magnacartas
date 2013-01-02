@@ -37,7 +37,8 @@ function GameCommWebSocket() {
     'drawCards' : GAMEMODEL.drawCards,
     'playMoney' : GAMEMODEL.someonePlayMoney,
     'buy' : GAMEMODEL.someoneBuy,
-    'startPlayCard': GAMEMODEL.startPlayCard
+    'startPlayCard': GAMEMODEL.startPlayCard,
+    'endPlayCard': GAMEMODEL.endPlayCard,
   }
 
   // receive handler
