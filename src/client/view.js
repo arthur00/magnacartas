@@ -89,6 +89,10 @@ function GameView() {
       GAMEVIEW.SlidePanels($(this).parent(), _close);
   });
 
+  $('#buyPhaseBtn').click(function(e) {
+    GAMEMODEL.toBuyPhase()
+  });
+
   /** ************************************ */
   /* Droppables */
   /** ************************************ */
@@ -1006,6 +1010,16 @@ function GameView() {
     });
     card.draggable("disable");
     $('#' + pos + 'Discard').append(card);
+  }
+
+  /** ************************************************************* */
+  /* Phase transitions */
+  /** ************************************************************* */
+
+  // replace the Recruit button by End Turn button
+  this.switchToBuyPhase = function() {
+    $('#buyPhaseBtn').hide()
+    $('#EndTurnBtn').show()
   }
 
   /** ****************** */

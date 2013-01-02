@@ -247,7 +247,7 @@ img {
 /* Player */
 /***********************/
 .resource {
-  width:200px;
+  width:180px;
   height:100%;
   float:left;
   position:relative;
@@ -281,6 +281,14 @@ img {
   color: blue;
 }
 
+#buyPhaseBtn, #EndTurnBtn {
+  float: left;
+  height: 100%;
+}
+
+#EndTurnBtn {
+	display: None;
+}
 
 #playerArea{
 }
@@ -310,9 +318,9 @@ img {
   #playerResources {
     position:absolute;
     bottom: 260px;
-    left:272px;
+    left:200px;
     height: 30px;
-    width:600px;
+    width:650px;
     float: left;
   }
 

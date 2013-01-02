@@ -34,6 +34,7 @@ function GameModel(playerId) {
   this.cardData = {};
   this.players = {}
   this.myTurn = false
+
   // when i play a card on the tableau, block the view
   // and wait for the server to tell me the effect of that card.
   // Use this stack to keep track of blocks.
@@ -160,6 +161,12 @@ function GameModel(playerId) {
 
   this.dropBuyingBoard = function(card) {
 
+  }
+
+  // user clicked on RECRUIT button
+  this.toBuyPhase = function() {
+    // TODO: should set myself in buying phase, ie disable actions
+    GAMECOMM.sendPlayAllMyMoneys()
   }
 
   /**
@@ -360,22 +367,22 @@ function GameModel(playerId) {
 
   // Someone placed money card(s) down to buy stuffs.
   // args = {'player': {'name': 'arthur'}, 'moneyCards': [card1, card2]}
-  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
+  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coins': 1}
   this.someonePlayMoney = function(args) {
     var pname = args.player.name
-    var cnames = new Array()
     var coins = 0
+    var cnames = []
     for ( var i = 0; i < args.moneyCards.length; i++) {
       cnames.push(args.moneyCards[i].name)
       coins += args.moneyCards[i].coins
     }
-    if (pname == self.myName) {
-      console
-          .log('I play ' + cnames.join() + ' and gain ' + coins + ' coin(s)')
-    } else {
-      console.log(pname + ' plays ' + cnames.join() + ' and gains ' + coins
-          + ' coin(s)')
+    var effect = {
+      'coins' : coins
     }
+    self.addResources(effect)
+    // TODO: this should hide the Recruit button and show the End Turn button
+    GAMEVIEW.switchToBuyPhase()
+
   }
 
   // A player just bought a card. CAN be myself.
