@@ -35,7 +35,7 @@ function GameCommWebSocket() {
     'gainResources' : GAMEMODEL.gainResources,
     'resetDeck' : GAMEMODEL.someoneResetDeck,
     'drawCards' : GAMEMODEL.drawCards,
-    'playMoney' : GAMEMODEL.someonePlayMoney,
+    'playMoney' : GAMEMODEL.buyPhase,
     'buy' : GAMEMODEL.someoneBuy,
     'startPlayCard': GAMEMODEL.startPlayCard,
     'endPlayCard': GAMEMODEL.endPlayCard,

@@ -4,7 +4,7 @@
 function Coordinates() {
   coordinates = {
       'player' : {
-        'Hand' : [512,610],
+        'Hand' : [$('#playerHand').offset().left,$('#playerHand').offset().top],
         'Mat' : [512,610-160],
         'Deck' : [$('#playerDeck').offset().left, $('#playerDeck').offset().top],
         'Discard' : [$('#playerDiscard').offset().left, $('#playerDiscard').offset().top]
@@ -22,7 +22,7 @@ function Coordinates() {
         'Discard' : [$('#rightDiscard').offset().left, $('#rightDiscard').offset().top]
       },
       'across' : {
-        'Hand' : [512,20],
+        'Hand' : [$('#acrossHand').offset().left,$('#acrossHand').offset().top],
         'Mat' : [512,100],
         'Deck' : [$('#acrossDeck').offset().left, $('#acrossDeck').offset().top],
         'Discard' : [$('#acrossDiscard').offset().left, $('#acrossDiscard').offset().top]

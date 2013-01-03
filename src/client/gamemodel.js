@@ -34,11 +34,12 @@ function GameModel(playerId) {
   this.cardData = {};
   this.players = {}
   this.myTurn = false
-  // when i play a card on the tableau, block the view
+
+  // when i play a card on the tableau, or buy a new card, block the view
   // and wait for the server to tell me the effect of that card.
   // Use this stack to keep track of blocks.
   // When the stack is empty, unblock the view.
-  this.cardPlayBlocks = []
+  this.cardBlocks = []
   // resource counters for all players at once/shared
   this.actions = 0
   this.buys = 0
@@ -152,14 +153,31 @@ function GameModel(playerId) {
   this.dropActionTableau = function(card) {
     addCardToTableau(card);
     cardName = this.getCtypeFromCard(card);
-    GAMEVIEW.disableAllEvents();
     GAMEVIEW.reArrangeHand(_player);
-    self.cardPlayBlocks.push(cardName)
+    GAMEVIEW.disableAllEvents();
+    self.cardBlocks.push(cardName)
     GAMECOMM.sendPlay(cardName)
   }
 
   this.dropBuyingBoard = function(card) {
 
+  }
+
+  // called when user buys a card from a pile
+  // display the animation: card goes from buying pile to my discard
+  // dont modify my local resources
+  // tell the server, and wait for its reply to unlock the screen
+  this.dblClickBuy = function(card) {
+    var ctype = this.getCtypeFromCard(card);
+    GAMEVIEW.buyCard(ctype, [ _player, _discard ]);
+    GAMEVIEW.disableAllEvents();
+    self.cardBlocks.push(ctype)
+    GAMECOMM.sendBuy(ctype)
+  }
+
+  // user clicked on RECRUIT button
+  this.toBuyPhase = function() {
+    GAMECOMM.sendPlayAllMyMoneys()
   }
 
   /**
@@ -334,6 +352,9 @@ function GameModel(playerId) {
   // from tableau + hand, and the top card of his discard pile is a Copper
   this.cleanupPhase = function(args) {
     var pname = args.player.name
+    var playerArea = self.players[pname].viewArea;
+    GAMEVIEW.endTurnClean(playerArea,args.num,args.top.name);
+    // 
     if (pname == self.myName) {
       console.log('I discard ' + args.num + ' cards. Top: ' + args.top.name)
     } else {
@@ -360,22 +381,34 @@ function GameModel(playerId) {
 
   // Someone placed money card(s) down to buy stuffs.
   // args = {'player': {'name': 'arthur'}, 'moneyCards': [card1, card2]}
-  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coin': 1}
-  this.someonePlayMoney = function(args) {
+  // card1 = {'name': 'Copper', 'cost': 1, 'qty': 20, 'qtyLeft': 20, 'coins': 1}
+  this.buyPhase = function(args) {
     var pname = args.player.name
-    var cnames = new Array()
     var coins = 0
+    var cnames = [], cname = ''
+    var playerArea = self.players[pname].viewArea
     for ( var i = 0; i < args.moneyCards.length; i++) {
-      cnames.push(args.moneyCards[i].name)
+      cname = args.moneyCards[i].name
+      cnames.push(cname)
       coins += args.moneyCards[i].coins
+      // move treasures from hand to tableau
+      GAMEVIEW.moveCard([ playerArea, _hand ], [ _table, _tableau ], cname)
     }
-    if (pname == self.myName) {
-      console
-          .log('I play ' + cnames.join() + ' and gain ' + coins + ' coin(s)')
-    } else {
-      console.log(pname + ' plays ' + cnames.join() + ' and gains ' + coins
-          + ' coin(s)')
+    // apply the +coins effect
+    var effect = {
+      'coins' : coins
     }
+    self.addResources(effect)
+    // tell the view to wire the buy for cards I can afford to buy
+    var buyableCards = []
+    for (cname in self.cardData) {
+      var card = self.cardData[cname]
+      if (card.cost <= self.coins) {
+        buyableCards.push(card.name)
+      }
+    }
+    GAMEVIEW.enableBuyingStacks(buyableCards)
+
   }
 
   // A player just bought a card. CAN be myself.
@@ -384,13 +417,39 @@ function GameModel(playerId) {
   // args = {'player': {'name': 'arthur'}, 'card': card1}
   this.someoneBuy = function(args) {
     var pname = args.player.name
-    var cName = args.card.name
+    var cname = args.card.name
     var qtyLeft = args.card.qtyLeft
+    // apply the buy effect
+    var effect = {
+      'buys' : -1,
+      'coins' : -args.card.cost
+    }
+    self.addResources(effect)
+    // if I am the one who bought that card, unblock the view
     if (pname == self.myName) {
-      console.log('I buy ' + cName + '. ' + qtyLeft + ' left in the pile.')
-    } else {
-      console.log(pname + ' buys ' + cName + '. ' + qtyLeft
-          + ' left in the pile.')
+      var myCname = self.cardBlocks.pop()
+      if (myCname != cname) {
+        throw 'Error when unblocking card buy: ' + myCname + ' vs ' + cname
+      }
+      // if no cards are blocking anymore, unblock
+      if (self.cardBlocks.length == 0) {
+        GAMEVIEW.enableAllEvents()
+      }
+      // if i can buy more stuff,
+      // tell the view to wire the buy for cards I can afford to buy
+      // otherwise, tell the server to end my turn
+      if (self.buys > 0) {
+        var buyableCards = []
+        for (cname in self.cardData) {
+          var card = self.cardData[cname]
+          if (card.cost <= self.coins) {
+            buyableCards.push(card.name)
+          }
+        }
+        GAMEVIEW.enableBuyingStacks(buyableCards)
+      } else {
+        GAMECOMM.sendEndMyTurn();
+      }
     }
   }
 
@@ -470,12 +529,12 @@ function GameModel(playerId) {
     var cname = args.card.name
     // if I played that card, unblock
     if (pname == self.myName) {
-      var myCname = self.cardPlayBlocks.pop()
+      var myCname = self.cardBlocks.pop()
       if (myCname != cname) {
-        throw 'Error when unblocking card action: ' + myCname + ' vs ' + cname
+        throw 'Error when unblocking card play: ' + myCname + ' vs ' + cname
       }
       // if no cards are blocking anymore, unblock
-      if (self.cardPlayBlocks.length == 0) {
+      if (self.cardBlocks.length == 0) {
         GAMEVIEW.enableAllEvents()
       }
 

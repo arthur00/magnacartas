@@ -50,6 +50,13 @@ function GameView() {
   var zlayer1 = 1000;
   var zlayer2 = 2000;
   var zlayer3 = 3000;
+  
+  this.cardsInHand = {
+    "player" : 0,
+    "across" : 0,
+    "left" : 0,
+    "right" : 0
+  }
 
   // this.init = function() {
 
@@ -87,6 +94,10 @@ function GameView() {
       GAMEVIEW.SlidePanels($($(this).parent()), _open);
     else
       GAMEVIEW.SlidePanels($(this).parent(), _close);
+  });
+
+  $('#buyPhaseBtn').click(function(e) {
+    GAMEMODEL.toBuyPhase()
   });
 
   /** ************************************ */
@@ -251,6 +262,8 @@ function GameView() {
     var discard = $('#' + pos + _discard);
     discard.children('.stackCounter').text(value + "");
     var card = this.newCard(topCardType);
+    if (pos != _player)
+      card = this.shrinkCard(card)
     this.addCardToDiscard(card, pos);
   }
 
@@ -262,6 +275,8 @@ function GameView() {
   // Source: tuple [source player, area]. E.g. [_player,_hand], [_left,_mat],
   // [_right,_discard].
   // if card is the source: [_card,card]
+  this.delay = 0;
+  this.defaultDelay = 200;
   this.moveCard = function(source, destination, ctype, afterMoveAnimation) {
     // var startPoint = coordinates[source]
     var animEasing = "easeInOutExpo";
@@ -279,6 +294,8 @@ function GameView() {
       // Am I moving a card from someone's hand? If so, actually remove it from
       // the player's hand.
       if (source[1] == _hand) {
+        // Add visual information of how many cards the player has
+        GAMEVIEW.cardsInHand[source[0]] -= 1;
         if (source[0] == _player) {
           card = $('#playerHand ._c_' + ctype).get(0);
           if (!card)
@@ -361,7 +378,9 @@ function GameView() {
       position : 'absolute',
       'z-index' : zlayer3 + 1
     });
-
+    
+    // Show only when animation starts
+    $(card).hide();
     var endPoint = coordinates[destination[0]][destination[1]];
     var moveAnimation = {
       left : endPoint[0],
@@ -380,12 +399,20 @@ function GameView() {
       }
       // Add card to hand of the destination player
       else if (destination[1] == _hand) {
+        // Adjust endpoint to account number of cards in hand
+        // Add visual information of how many cards the player has
+        GAMEVIEW.cardsInHand[destination[0]] += 1;
         if (destination[0] == _player) {
+          moveAnimation.left += cardSeparation * GAMEVIEW.cardsInHand[destination[0]]; 
           afterMoveAnimation = function(_card_) {
             _card_.remove();
             GAMEVIEW.addCardToHand(_player, GAMEVIEW.newCard(ctype));
           }
         } else {
+          if (destination[0] == _across)
+            moveAnimation.left += cardSeparation * GAMEVIEW.cardsInHand[destination[0]];
+          else 
+            moveAnimation.top += cardSeparation * GAMEVIEW.cardsInHand[destination[0]];
           afterMoveAnimation = function(_card_) {
             GAMEVIEW.addCardToHand(destination[0]);
             _card_.remove();
@@ -403,6 +430,11 @@ function GameView() {
         afterMoveAnimation = function(_card_) {
           GAMEVIEW.addCardToDiscard(_card_, destination[0]);
         }
+      } else if (destination[1] == _tableau) {
+          destinationSize = "normal";
+          afterMoveAnimation = function(_card_) {
+            GAMEVIEW.addCardToTableau(_card_);           
+          }
       } else if (destination[1] == "buying") {
         afterMoveAnimation = function(_card_) {
           GAMEVIEW.addBuyingStack(ctype, 1);
@@ -478,19 +510,30 @@ function GameView() {
         }
       }
     }
-    $(card).animate(moveAnimation, {
-      duration : speed,
-      easing : animEasing,
-      complete : function() {
-        if (afterMoveAnimation) {
-          $(card).css({
-            'z-index' : 0
-          });
-          afterMoveAnimation($(card));
-        }
-      },
-      step : stepAnim
-    });
+    
+    this.delay += this.defaultDelay;
+    setTimeout(function() {
+      $(card).show();
+      $(card).animate(moveAnimation, {
+        duration : speed,
+        easing : animEasing,
+        complete : function() {
+          GAMEVIEW.delay -= GAMEVIEW.defaultDelay;
+          if (afterMoveAnimation) {
+            $(card).css({
+              'position' : 'absolute',
+              'z-index' : 0,
+              'top': 0,
+              'left' : 0,
+              'right' : 0,
+              'bottom' : 0
+            });
+            afterMoveAnimation($(card));
+          }
+        },
+        step : stepAnim
+      });
+    }, this.delay);
 
     // Reorganize hand of player, if card came from someone's hand.
     if (source[1] == _hand)
@@ -537,6 +580,28 @@ function GameView() {
     }, ]);
   }
 
+  // enable double click for given stacks
+  // hide the "buy phase' button, show the end turn button
+  this.enableBuyingStacks = function(ctypes) {
+    var $buyingArea = $('#largeBuying');
+    for (var i = 0; i< ctypes.length; i++) {
+      var $stack = $($buyingArea.children('._c_'+ctypes[i]));
+      $stack.dblclick(function() {
+        GAMEMODEL.dblClickBuy($(this));
+      });
+    }
+    // buttons
+    $('#buyPhaseBtn').hide()
+    $('#EndTurnBtn').show()
+  }
+  
+  // remove the double click callback
+  this.disableAllBuyingStacks = function() {
+    var $buyingArea = $('#largeBuying');
+    var $stacks = $($buyingArea.children('.card'))
+    $stacks.unbind();
+  }
+  
   this.getBuyingStackSize = function() {
     ret = {};
     ret.y = buyingGrid.length;
@@ -569,9 +634,10 @@ function GameView() {
 
       var $card = this.newCard(ctype);
       $card.draggable('disable');
+      /*
       $card.dblclick(function() {
         GAMEVIEW.buyCard(ctype, [ _player, _discard ]);
-      });
+      });*/
       leftPos = pos[1];
       topPos = pos[0];
       $card.css({
@@ -619,6 +685,8 @@ function GameView() {
           ctype);
       this.showBuyingBoard(_close);
     }
+    // disable double clicks on piles - cant buy anymore until server replies
+    this.disableAllBuyingStacks();
   }
 
   /** ************************************************************* */
@@ -715,6 +783,7 @@ function GameView() {
           y : '',
           transform : ''
         });
+        GAMEVIEW.cardsInHand[_player] -= 1;
         GAMEMODEL.startDraggingCard($(this));
       },
       stop : function() {
@@ -729,8 +798,9 @@ function GameView() {
       revert : function(socketObj) {
         if (socketObj === false) {
           setTimeout(function() {
-            GAMEVIEW.reArrangeHand(_player)
+            GAMEVIEW.reArrangeHand(_player);
           }, GAMEVIEW.revertAnimationDuration);
+          GAMEVIEW.cardsInHand[_player] += 1;
           return true;
         } else {
           setTimeout(function() {
@@ -915,6 +985,7 @@ function GameView() {
     this.reArrangeHand(pos);
   }
 
+  var cardSeparation = 30;
   this.reArrangeHand = function(pos) {
     var curTop = 0;
     var curLeft = 0;
@@ -932,12 +1003,12 @@ function GameView() {
     if (pos == _player || pos == _tableau) {
       for (i = 0; i < cards.length; i++) {
         $(cards[i]).css({
-          left : curLeft,
-          top : 0,
+          'left': curLeft,
+          'top': 0,
           position : 'absolute',
           'z-index' : startZ++
         });
-        curLeft += 30;
+        curLeft += cardSeparation;
       }
     } else if (pos == _left) {
       for (i = 0; i < cards.length; i++) {
@@ -948,7 +1019,7 @@ function GameView() {
           position : 'absolute',
           'z-index' : startZ++
         });
-        curTop += 30;
+        curTop += cardSeparation;
       }
     } else if (pos == _right) {
       for (i = 0; i < cards.length; i++) {
@@ -959,7 +1030,7 @@ function GameView() {
           position : 'absolute',
           'z-index' : startZ++
         });
-        curTop += 30;
+        curTop += cardSeparation;
       }
     } else if (pos == _across) {
       for (i = 0; i < cards.length; i++) {
@@ -970,7 +1041,7 @@ function GameView() {
           position : 'absolute',
           'z-index' : startZ++
         });
-        curLeft += 30;
+        curLeft += cardSeparation;
       }
     }
   } // end reArrangeHand
@@ -997,15 +1068,27 @@ function GameView() {
     if (pos == "player")
       classType = ".card";
     else
-      classType = ".cardSized";
+      classType = ".smallDiscard";
     $($('#' + pos + 'Discard').children(classType)).remove();
     card.css({
       top : 0,
       left : 0,
       'z-index' : 0
     });
-    card.draggable("disable");
+    if (pos == _player)
+      card.draggable("disable");
     $('#' + pos + 'Discard').append(card);
+  }
+
+  /** ************************************************************* */
+  /* Phase transitions */
+  /** ************************************************************* */
+
+  this.endTurnClean = function(pos,discardValue,discardTop) {
+    this.showBuyingBoard(_close);
+    this.cleanTableau(pos);
+    this.cleanHand(pos);
+    this.setDiscard(pos,discardValue,discardTop); 
   }
 
   /** ****************** */
@@ -1026,6 +1109,8 @@ function GameView() {
     else
       cardClass = ".cardSized";
     cardsHand = ($('#' + source + 'Hand').children(cardClass));
+    this.cardsInHand[source] = 0;
+    
     for (i = 0; i < cardsHand.length; i++) {
       if ((source == _left) || (source == _right)) {
         if (source == _left)

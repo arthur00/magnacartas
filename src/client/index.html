@@ -3,9 +3,9 @@
 <title>Cards without canvas</title>
 <link rel="stylesheet" href="style.css">
 <script
-  src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+	src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script
-  src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+	src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
 <script src="lib/jquery.crSpline.js"></script>
 <script src="lib/jquery.transit.js"></script>
 <script src="lib/jquery.easing.1.3.js"></script>
@@ -20,100 +20,99 @@
 
 </head>
 <body>
-  <div id='gameBoard'>
-    <div id='hiddenLayer'> </div>
-    <!--Table -->
-    <div class='tableau' id='actionTableau'></div>
-    <div id='buyingBoard'>
-      <div id='smallBuying'></div>
-      <div id='largeBuying'>
-        <div class='close' id='buyingClose'></div>
-      </div>
-    </div>
-    <div id='playerResources'>
-      <div class='resource' id='playerActions'>
-        <div class='resourceCounter' id='numPlayerActions'>0</div>
-        <div class='resourceText'> Actions </div>        
-      </div>
-      <div class='resource' id='playerBuys'>
-        <div class='resourceCounter' id='numPlayerBuys'>0</div>
-        <div class='resourceText'> Buys </div>
-      </div>    
-      <div class='resource' id='playerCoins'>
-        <div class='resourceCounter' id='numPlayerCoins'>0</div>
-        <div class='resourceText'> Coins </div>
-      </div>
-    </div>
-    
-    <!-- Player -->
-    <div id='playerArea'>
-      <div class='faceDown cardSized' id='playerDeck'>
-        <div class='stackCounter' id='playerNumDeck'>0</div>
-      </div>
-      <div class='handArea' id='playerHand'> </div>
-      <div class='discard faceUp cardSized' id='playerDiscard'>
-        <div class='stackCounter' id='playerNumDiscard'>0</div>
-      </div>
-      <div class='mat' id='playerMat'>
-        <div class='openclose' id='playerOpenClose'></div>      
-        <div class='smallMat' id='playerSmallMat'></div>
-        <div class='largeMat' id='playerLargeMat'>   
-        </div>
-      </div>
-    </div>
-    
-    <!-- Left Opponent -->
-    <div class='opponent' id='leftOpponent'>
-      <div class='handArea' id='leftHand'></div>
-      <div class='discard smallDiscard faceUp' id='leftDiscard'>
-       <div class='stackCounter' id='leftNumDiscard'>0</div>
-      </div>
-      <div class='smallDeck faceDown' id='leftDeck'>
-        <div class='stackCounter' id='leftNumDeck'>0</div>
-      </div>
-      <div class='mat' id='leftMat'>
-        <div class='openclose' id='leftOpenClose'></div>            
-        <div class='smallMat' id='leftSmallMat'></div>
-        <div class='largeMat' id='leftLargeMat'>    
-        </div>
-      </div>
-    </div>
+	<div id='gameBoard'>
+		<div id='hiddenLayer'></div>
+		<!--Table -->
+		<div class='tableau' id='actionTableau'></div>
+		<div id='buyingBoard'>
+			<div id='smallBuying'></div>
+			<div id='largeBuying'>
+				<div class='close' id='buyingClose'></div>
+			</div>
+		</div>
+		<div id='playerResources'>
+			<div class='resource' id='playerActions'>
+				<div class='resourceCounter' id='numPlayerActions'>0</div>
+				<div class='resourceText'>Actions</div>
+			</div>
+			<div class='resource' id='playerBuys'>
+				<div class='resourceCounter' id='numPlayerBuys'>0</div>
+				<div class='resourceText'>Buys</div>
+			</div>
+			<div class='resource' id='playerCoins'>
+				<div class='resourceCounter' id='numPlayerCoins'>0</div>
+				<div class='resourceText'>Coins</div>
+			</div>
+			<button id='buyPhaseBtn'>Recruit!</button>
+			<button id='EndTurnBtn'>End turn</button>
+		</div>
 
-    <!-- Right Opponent -->
-    <div class='opponent' id='rightOpponent'>
-      <div class='handArea' id='rightHand'></div>
-      <div class='discard smallDiscard faceUp' id='rightDiscard'>
-        <div class='stackCounter' id='rightNumDiscard'>0</div>
-      </div>
-      <div class='smallDeck faceDown' id='rightDeck'>
-       <div class='stackCounter' id='rightNumDiscard'>0</div>
-      </div>
-      <div class='mat' id='rightMat'>
-        <div class='openclose' id='rightOpenClose'></div>
-        <div class='smallMat' id='rightSmallMat'></div>
-        <div class='largeMat' id='rightLargeMat'>    
-        </div>
-      </div>
-    </div>
+		<!-- Player -->
+		<div id='playerArea'>
+			<div class='faceDown cardSized' id='playerDeck'>
+				<div class='stackCounter' id='playerNumDeck'>0</div>
+			</div>
+			<div class='handArea' id='playerHand'></div>
+			<div class='discard faceUp cardSized' id='playerDiscard'>
+				<div class='stackCounter' id='playerNumDiscard'>0</div>
+			</div>
+			<div class='mat' id='playerMat'>
+				<div class='openclose' id='playerOpenClose'></div>
+				<div class='smallMat' id='playerSmallMat'></div>
+				<div class='largeMat' id='playerLargeMat'></div>
+			</div>
+		</div>
 
-    <!-- Across Opponent -->
-    <div class='opponent' id='acrossOpponent'>
-      <div class='handArea' id='acrossHand'></div>
-      <div class='discard smallDiscard faceUp' id='acrossDiscard'>
-        <div class='stackCounter' id='acrossNumDiscard'>0</div>
-      </div>
-      <div class='smallDeck faceDown' id='acrossDeck'>
-        <div class='stackCounter' id='acrossNumDeck'>0</div>
-      </div>
-      <div class='mat' id='acrossMat'>
-        <div class='openclose' id='acrossOpenClose'></div>            
-        <div class='smallMat' id='acrossSmallMat'></div>
-        <div class='largeMat' id='acrossLargeMat'>    
-        </div>
-      </div>
-    </div>
-    <div id='floating'></div>
-    <div id=''></div>
-  </div> <!-- game board -->
+		<!-- Left Opponent -->
+		<div class='opponent' id='leftOpponent'>
+			<div class='handArea' id='leftHand'></div>
+			<div class='discard smallDiscard faceUp' id='leftDiscard'>
+				<div class='stackCounter' id='leftNumDiscard'>0</div>
+			</div>
+			<div class='smallDeck faceDown' id='leftDeck'>
+				<div class='stackCounter' id='leftNumDeck'>0</div>
+			</div>
+			<div class='mat' id='leftMat'>
+				<div class='openclose' id='leftOpenClose'></div>
+				<div class='smallMat' id='leftSmallMat'></div>
+				<div class='largeMat' id='leftLargeMat'></div>
+			</div>
+		</div>
+
+		<!-- Right Opponent -->
+		<div class='opponent' id='rightOpponent'>
+			<div class='handArea' id='rightHand'></div>
+			<div class='discard smallDiscard faceUp' id='rightDiscard'>
+				<div class='stackCounter' id='rightNumDiscard'>0</div>
+			</div>
+			<div class='smallDeck faceDown' id='rightDeck'>
+				<div class='stackCounter' id='rightNumDiscard'>0</div>
+			</div>
+			<div class='mat' id='rightMat'>
+				<div class='openclose' id='rightOpenClose'></div>
+				<div class='smallMat' id='rightSmallMat'></div>
+				<div class='largeMat' id='rightLargeMat'></div>
+			</div>
+		</div>
+
+		<!-- Across Opponent -->
+		<div class='opponent' id='acrossOpponent'>
+			<div class='handArea' id='acrossHand'></div>
+			<div class='discard smallDiscard faceUp' id='acrossDiscard'>
+				<div class='stackCounter' id='acrossNumDiscard'>0</div>
+			</div>
+			<div class='smallDeck faceDown' id='acrossDeck'>
+				<div class='stackCounter' id='acrossNumDeck'>0</div>
+			</div>
+			<div class='mat' id='acrossMat'>
+				<div class='openclose' id='acrossOpenClose'></div>
+				<div class='smallMat' id='acrossSmallMat'></div>
+				<div class='largeMat' id='acrossLargeMat'></div>
+			</div>
+		</div>
+		<div id='floating'></div>
+		<div id=''></div>
+	</div>
+	<!-- game board -->
 </body>
 </html>

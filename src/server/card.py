@@ -134,7 +134,7 @@ class CartographerCard(PirateCard):
 
     def do_effect(self):
         self._game.cur_player.draw_cards(3)
-        self._game.cur_player.add_resources(Resource(buy=1))
+        self._game.cur_player.add_resources(Resource(buy=1, coins=5))
 
 
 
