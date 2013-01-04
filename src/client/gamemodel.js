@@ -150,7 +150,7 @@ function GameModel(playerId) {
     addCardToTableau(card);
     cardName = this.getCtypeFromCard(card);
     GAMEVIEW.reArrangeHand(_player);
-    GAMEVIEW.disableAllEvents();
+    GAMEVIEW.networkDisableView();
     self.cardBlocks.push(cardName)
     GAMECOMM.sendPlay(cardName)
   }
@@ -166,7 +166,7 @@ function GameModel(playerId) {
   this.dblClickBuy = function(card) {
     var ctype = this.getCtypeFromCard(card);
     GAMEVIEW.buyCard(ctype, [ _player, _discard ]);
-    GAMEVIEW.disableAllEvents();
+    GAMEVIEW.networkDisableView();
     self.cardBlocks.push(ctype)
     GAMECOMM.sendBuy(ctype)
   }
@@ -422,7 +422,7 @@ function GameModel(playerId) {
       }
       // if no cards are blocking anymore, unblock
       if (self.cardBlocks.length == 0) {
-        GAMEVIEW.enableAllEvents()
+        GAMEVIEW.networkEnableView()
       }
       // if i can buy more stuff,
       // tell the view to wire the buy for cards I can afford to buy
@@ -524,7 +524,7 @@ function GameModel(playerId) {
       }
       // if no cards are blocking anymore, unblock
       if (self.cardBlocks.length == 0) {
-        GAMEVIEW.enableAllEvents()
+        GAMEVIEW.networkEnableView()
       }
 
     }

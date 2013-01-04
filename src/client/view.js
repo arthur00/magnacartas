@@ -190,14 +190,26 @@ function GameView() {
     this.cancelGreyOut();
   }
 
-  this.disableAllEvents = function() {
+  this.networkDisableView = function() {
     $('#gameBoard').css({
       'pointer-events' : 'none'
     });
   }
 
-  this.enableAllEvents = function() {
+  this.networkEnableView = function() {
     $('#gameBoard').css({
+      'pointer-events' : 'auto'
+    });
+  }
+  
+  this.animationDisableView = function() {
+    $('#boardLock').css({
+      'pointer-events' : 'none'
+    });
+  }
+
+  this.animationEnableView = function() {
+    $('#boardLock').css({
       'pointer-events' : 'auto'
     });
   }
@@ -523,6 +535,8 @@ function GameView() {
       }
     }
 
+    // Lock screen until animation is done.
+    GAMEVIEW.animationDisableView();
     $(card).draggable("disable");
     this.delay += this.defaultDelay;
     setTimeout(function() {
@@ -532,6 +546,8 @@ function GameView() {
         easing : animEasing,
         complete : function() {
           GAMEVIEW.delay -= GAMEVIEW.defaultDelay;
+          if (GAMEVIEW.delay == 0)
+            GAMEVIEW.animationEnableView();
           if (afterMoveAnimation) {
             $(card).css({
               'position' : 'absolute',
@@ -1068,9 +1084,7 @@ function GameView() {
       x : 0,
       y : 0
     });
-    console.log('add to tableau')
     card.draggable("disable");
-    console.log('add to tableau disable')
     $('#actionTableau').append(card);
     cards = $('#actionTableau').children();
 
