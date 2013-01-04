@@ -50,7 +50,7 @@ function GameView() {
   var zlayer1 = 1000;
   var zlayer2 = 2000;
   var zlayer3 = 3000;
-  
+
   this.cardsInHand = {
     "player" : 0,
     "across" : 0,
@@ -261,12 +261,16 @@ function GameView() {
   // set discard size and top card of player in position pos
   this.setDiscard = function(pos, size, topCardType) {
     var discard = $('#' + pos + _discard);
-    if (size)
+    if (size) {
       discard.children('.stackCounter').text(size + "");
+    }
     var card = this.newCard(topCardType);
-    if (pos != _player)
+    if (pos != _player) {
       card = this.shrinkCard(card)
-    this.addCardToDiscard(card, pos);
+    }
+    setTimeout(function() {
+      GAMEVIEW.addCardToDiscard(card, pos);
+    },GAMEVIEW.delay);
   }
 
   /** ************************************************************* */
@@ -380,7 +384,7 @@ function GameView() {
       position : 'absolute',
       'z-index' : zlayer3 + 1
     });
-    
+
     // Show only when animation starts
     $(card).hide();
     var endPoint = coordinates[destination[0]][destination[1]];
@@ -405,16 +409,19 @@ function GameView() {
         // Add visual information of how many cards the player has
         GAMEVIEW.cardsInHand[destination[0]] += 1;
         if (destination[0] == _player) {
-          moveAnimation.left += cardSeparation * GAMEVIEW.cardsInHand[destination[0]]; 
+          moveAnimation.left += cardSeparation
+              * GAMEVIEW.cardsInHand[destination[0]];
           afterMoveAnimation = function(_card_) {
             _card_.remove();
             GAMEVIEW.addCardToHand(_player, GAMEVIEW.newCard(ctype));
           }
         } else {
           if (destination[0] == _across)
-            moveAnimation.left += cardSeparation * GAMEVIEW.cardsInHand[destination[0]];
-          else 
-            moveAnimation.top += cardSeparation * GAMEVIEW.cardsInHand[destination[0]];
+            moveAnimation.left += cardSeparation
+                * GAMEVIEW.cardsInHand[destination[0]];
+          else
+            moveAnimation.top += cardSeparation
+                * GAMEVIEW.cardsInHand[destination[0]];
           afterMoveAnimation = function(_card_) {
             GAMEVIEW.addCardToHand(destination[0]);
             _card_.remove();
@@ -430,13 +437,16 @@ function GameView() {
         if (destination[0] != _player)
           destinationSize = "small";
         afterMoveAnimation = function(_card_) {
-          GAMEVIEW.addCardToDiscard(_card_, destination[0]);
+          if (!_card_.hasClass("faceDown"))
+            GAMEVIEW.addCardToDiscard(_card_, destination[0]);
+          else
+            _card_.remove();
         }
       } else if (destination[1] == _tableau) {
-          destinationSize = "normal";
-          afterMoveAnimation = function(_card_) {
-            GAMEVIEW.addCardToTableau(_card_);           
-          }
+        destinationSize = "normal";
+        afterMoveAnimation = function(_card_) {
+          GAMEVIEW.addCardToTableau(_card_);
+        }
       } else if (destination[1] == "buying") {
         afterMoveAnimation = function(_card_) {
           GAMEVIEW.addBuyingStack(ctype, 1);
@@ -512,8 +522,8 @@ function GameView() {
         }
       }
     }
-    
-    $(card).draggable("disable");    
+
+    $(card).draggable("disable");
     this.delay += this.defaultDelay;
     setTimeout(function() {
       $(card).show();
@@ -526,7 +536,7 @@ function GameView() {
             $(card).css({
               'position' : 'absolute',
               'z-index' : 0,
-              'top': 0,
+              'top' : 0,
               'left' : 0,
               'right' : 0,
               'bottom' : 0
@@ -587,8 +597,8 @@ function GameView() {
   // hide the "buy phase' button, show the end turn button
   this.enableBuyingStacks = function(ctypes) {
     var $buyingArea = $('#largeBuying');
-    for (var i = 0; i< ctypes.length; i++) {
-      var $stack = $($buyingArea.children('._c_'+ctypes[i]));
+    for ( var i = 0; i < ctypes.length; i++) {
+      var $stack = $($buyingArea.children('._c_' + ctypes[i]));
       $stack.dblclick(function() {
         GAMEMODEL.dblClickBuy($(this));
       });
@@ -597,14 +607,14 @@ function GameView() {
     $('#buyPhaseBtn').hide()
     $('#EndTurnBtn').show()
   }
-  
+
   // remove the double click callback
   this.disableAllBuyingStacks = function() {
     var $buyingArea = $('#largeBuying');
     var $stacks = $($buyingArea.children('.card'))
     $stacks.unbind();
   }
-  
+
   this.getBuyingStackSize = function() {
     ret = {};
     ret.y = buyingGrid.length;
@@ -638,9 +648,9 @@ function GameView() {
       var $card = this.newCard(ctype);
       $card.draggable('disable');
       /*
-      $card.dblclick(function() {
-        GAMEVIEW.buyCard(ctype, [ _player, _discard ]);
-      });*/
+       * $card.dblclick(function() { GAMEVIEW.buyCard(ctype, [ _player, _discard
+       * ]); });
+       */
       leftPos = pos[1];
       topPos = pos[0];
       $card.css({
@@ -723,9 +733,8 @@ function GameView() {
         'class' : 'smallDeck faceDown'
       })
     }
-    card.draggable({});
+    card.draggable();
     card.draggable("disable");
-    
     return card;
   }
 
@@ -983,9 +992,7 @@ function GameView() {
     if (pos == _player) {
       $('#playerHand').append(card);
     } else {
-      var $card = $('<div/>').attr({
-        'class' : 'faceDown cardSized'
-      });
+      var $card = this.newFacedownCard("normal");
       $('#' + pos + 'Hand').append($card);
     }
     this.reArrangeHand(pos);
@@ -1009,8 +1016,8 @@ function GameView() {
     if (pos == _player || pos == _tableau) {
       for (i = 0; i < cards.length; i++) {
         $(cards[i]).css({
-          'left': curLeft,
-          'top': 0,
+          'left' : curLeft,
+          'top' : 0,
           position : 'absolute',
           'z-index' : startZ++
         });
@@ -1061,7 +1068,9 @@ function GameView() {
       x : 0,
       y : 0
     });
+    console.log('add to tableau')
     card.draggable("disable");
+    console.log('add to tableau disable')
     $('#actionTableau').append(card);
     cards = $('#actionTableau').children();
 
@@ -1081,13 +1090,12 @@ function GameView() {
     if (pos == _player)
       card.draggable("disable");
     $('#' + pos + 'Discard').append(card);
-    
-    /* Don't set it here! Model should do it
-    var counter = $('#' + pos + 'Discard .stackCounter');
-    var num = counter.text();
-    var qty = parseInt(num) + 1
-    counter.text(qty);
-    */
+
+    /*
+     * Don't set it here! Model should do it var counter = $('#' + pos +
+     * 'Discard .stackCounter'); var num = counter.text(); var qty =
+     * parseInt(num) + 1 counter.text(qty);
+     */
 
   }
 
@@ -1095,11 +1103,11 @@ function GameView() {
   /* Phase transitions */
   /** ************************************************************* */
 
-  this.endTurnClean = function(pos,discardValue,discardTop) {
+  this.endTurnClean = function(pos, discardValue, discardTop) {
     this.showBuyingBoard(_close);
     this.cleanTableau(pos);
     this.cleanHand(pos);
-    this.setDiscard(pos,discardValue,discardTop); 
+    this.setDiscard(pos, discardValue, discardTop);
   }
 
   /** ****************** */
@@ -1121,7 +1129,7 @@ function GameView() {
       cardClass = ".cardSized";
     cardsHand = ($('#' + source + 'Hand').children(cardClass));
     this.cardsInHand[source] = 0;
-    
+
     for (i = 0; i < cardsHand.length; i++) {
       if ((source == _left) || (source == _right)) {
         if (source == _left)

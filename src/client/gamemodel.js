@@ -343,13 +343,6 @@ function GameModel(playerId) {
   this.cleanupPhase = function(args) {
     var pname = args.player.name
     self.players[pname].endTurn(args.num, args.top.name)
-    // 
-    if (pname == self.myName) {
-      console.log('I discard ' + args.num + ' cards. Top: ' + args.top.name)
-    } else {
-      console.log(pname + ' discards ' + args.num + ' cards. Top: '
-          + args.top.name)
-    }
   }
 
   // Network callback

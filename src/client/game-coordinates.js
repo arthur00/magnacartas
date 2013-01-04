@@ -16,7 +16,7 @@ function Coordinates() {
         'Discard' : [$('#leftDiscard').offset().left, $('#leftDiscard').offset().top]
       },
       'right' : {
-        'Hand' : [$('#playerRight').offset().left,$('#playerRight').offset().top],
+        'Hand' : [$('#rightHand').offset().left,$('#rightHand').offset().top],
         'Mat' : [$('#rightMat').offset().left,$('#rightMat').offset().top],
         'Deck' : [$('#rightDeck').offset().left, $('#rightDeck').offset().top],
         'Discard' : [$('#rightDiscard').offset().left, $('#rightDiscard').offset().top]
