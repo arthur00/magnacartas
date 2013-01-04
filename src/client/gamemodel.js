@@ -68,10 +68,6 @@ function GameModel(playerId) {
     GAMEVIEW.setDeck(pos, value);
   }
 
-  this.setDiscard = function(pos, value, topCard) {
-    // TODO: store locally in model
-    GAMEVIEW.setDiscard(pos, value, topCard);
-  }
 
   /** ****************************************** */
   /** ** Helper *** */
@@ -186,6 +182,7 @@ function GameModel(playerId) {
    * 
    */
 
+  // 
   // add resources about the current player
   // and re-display the counters in the view
   this.addResources = function(effect) {
@@ -269,21 +266,14 @@ function GameModel(playerId) {
     }
 
     // add my play area first
-    self.players[self.myName] = {
-      'player' : table[myIndex],
-      'deckSize' : null,
-      'viewArea' : _player
-    }
+    self.players[self.myName] = new Player(table[myIndex], _player)
     GAMEVIEW.activatePlayer(viewAreas[i])
 
     // keep iterating until i find myself again
     var playerIndex = myIndex + 1, viewIndex = 0
     while (table[playerIndex % table.length].name != self.myName) {
       var player = table[playerIndex % table.length]
-      self.players[player.name] = {
-        'player' : player,
-        'viewArea' : viewAreas[viewIndex]
-      }
+      self.players[player.name] = new Player(player, viewAreas[viewIndex])
       GAMEVIEW.activatePlayer(viewAreas[viewIndex])
       viewIndex++
       playerIndex++
@@ -352,8 +342,7 @@ function GameModel(playerId) {
   // from tableau + hand, and the top card of his discard pile is a Copper
   this.cleanupPhase = function(args) {
     var pname = args.player.name
-    var playerArea = self.players[pname].viewArea;
-    GAMEVIEW.endTurnClean(playerArea,args.num,args.top.name);
+    self.players[pname].endTurn(args.num, args.top.name)
     // 
     if (pname == self.myName) {
       console.log('I discard ' + args.num + ' cards. Top: ' + args.top.name)
@@ -407,7 +396,10 @@ function GameModel(playerId) {
         buyableCards.push(card.name)
       }
     }
-    GAMEVIEW.enableBuyingStacks(buyableCards)
+    // allow the view to buy stuffs only if it's my turn
+    if (self.myName == pname) {
+      GAMEVIEW.enableBuyingStacks(buyableCards)
+    }
 
   }
 
@@ -425,6 +417,10 @@ function GameModel(playerId) {
       'coins' : -args.card.cost
     }
     self.addResources(effect)
+
+    // whatever player, increase discard pile by one, and place new card on top
+    self.players[pname].addToDiscard(cname)
+
     // if I am the one who bought that card, unblock the view
     if (pname == self.myName) {
       var myCname = self.cardBlocks.pop()
@@ -542,4 +538,38 @@ function GameModel(playerId) {
 
   }
 
+}
+
+// data container for player
+function Player(playerData, viewArea) {
+
+  this.name = playerData.name
+  this.viewArea = viewArea
+  this.deck = {
+    size : 0
+  }
+  this.discard = {
+    size : 0,
+    top : null
+  }
+
+  var self = this
+
+  // add card to top of discard pile and increase counter by 1
+  this.addToDiscard = function(cardName) {
+    self.discard.size += 1
+    self.discard.top = cardName
+    // display animation for remote players
+    if (self.viewArea != _player) {
+      GAMEVIEW.buyCard(cardName, [ self.viewArea, _discard ]);
+    }
+    GAMEVIEW.setDiscard(self.viewArea, self.discard.size, cardName)
+  }
+  
+  // set my discard area
+  this.endTurn = function(size, topName) {
+    self.discard.size += size
+    self.discard.top = topName
+    GAMEVIEW.endTurnClean(self.viewArea, self.discard.size, topName);
+  }
 }

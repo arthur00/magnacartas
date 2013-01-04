@@ -12,10 +12,6 @@ from logger import logger
 from server.resource import Resource
 
 class Card():
-    name = ''
-    cost = 0 # 1 for copper, 7 for gold
-    qty = 0 # how many cards can be bought in the pile, at game start
-    qty_left = 0 # how many cards are left to buy
     img = 'img/william_kidd.jpg'
 
 
@@ -29,14 +25,14 @@ class Card():
             self._game = game
             if not sampler:
                 # __class__ is the highest parent, eg CopperCard, and not Card
-                self.__class__.qty_left -= 1 # TODO: this is not working!!!
+                self.__class__.qty_left -= 1
 
 
     def serialize(self):
         d = {'name': self.name,
              'cost': self.cost,
              'qty': self.qty,
-             'qtyLeft': self.qty_left,
+             'qtyLeft': self.__class__.qty_left,
              'img': self.img
              }
         return d

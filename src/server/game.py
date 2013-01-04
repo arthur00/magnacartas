@@ -25,7 +25,7 @@ class PirateGame():
 
     def reset(self):
         """ Remove any previously connected player.
-        The game starts when enough players are connected.  
+        The game will start when enough players are connected.  
         """
         for player in self.table:
             player.kick_out()
@@ -102,8 +102,15 @@ class PirateGame():
         Finally, begin the starting player's turn.
         """
 
-        # start the game: send the table seating and the card piles
+        # start the game
         self.piles = pick_piles(2)
+        # prepare the players decks
+        player_decks = {}
+        for player in self.table:
+            deck = [CopperCard(self) for _ in range(4)]
+            deck += [CartographerCard(self) for _ in range(6)]
+            player_decks[player] = deck
+        # send the table seating and the card piles
         self.game_started = True
         samplers = [card_class(self, True) for card_class in self.piles.values()]
         for player in self.table:
@@ -111,8 +118,7 @@ class PirateGame():
 
         # each player prepares his hand and deck
         for player in self.table:
-            deck = [CopperCard(self) for _ in range(4)]
-            deck += [CartographerCard(self) for _ in range(6)]
+            deck = player_decks[player]
             player.reset_deck(deck)
             player.draw_hand()
 
@@ -121,6 +127,8 @@ class PirateGame():
         start_player.start_turn()
 
 
+
+    ########################  phases
 
     def bc_start_phase(self, player, rsrc):
         """ Broadcast the starting phase of a player. 
@@ -156,7 +164,7 @@ class PirateGame():
             self._curindex = (self._curindex + 1) % len(self.table)
             next_player = self.cur_player
             next_player.start_turn()
-            
+
 
 
     def end_game(self):
@@ -200,10 +208,10 @@ class PirateGame():
     def bc_gain_resources(self, player, resources):
         """ Notify all players that a player gained some resources. """
         for p in self.table:
-            p.ntf_gain_resources(player, resources)        
-        
-        
-        
+            p.ntf_gain_resources(player, resources)
+
+
+
     def bc_playmoney(self, player, moneycards):
         """ A player plays a money card to buy stuffs. Notify everyone. """
         for p in self.table:
@@ -211,7 +219,7 @@ class PirateGame():
 
 
 
-    def bc_buy(self, player, coins, card_name):
+    def player_buy(self, player, coins, card_name):
         """ A player tries to buy a card from a buying pile. """
         card_class = self.piles[card_name]
         # enough money and cards left in the pile
@@ -220,6 +228,7 @@ class PirateGame():
                 card = card_class(self)
                 if card.qty_left == 0:
                     self.num_piles_gone += 1
+                player.buy_card(card)
                 for p in self.table:
                     p.ntf_buy(player, card)
 
@@ -235,16 +244,16 @@ class PirateGame():
 
 
     #####################  play cards
-    
+
     def bc_start_play_card(self, player, card):
         """ Notify all players that a player starts playing a card. """
         for p in self.table:
             p.ntf_start_play_card(player, card)
-        
+
     def bc_end_play_card(self, player, card):
         """ Notify all players that a card is done with its effects. """
         for p in self.table:
             p.ntf_end_play_card(player, card)
-        
-        
-        
+
+
+

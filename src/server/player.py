@@ -363,19 +363,22 @@ class Player():
         """
         if self._phase is PHASE_BUYING and self.buys > 0 and 'name' in args:
             card_name = args['name']
-            self._game.bc_buy(self, self.coins, card_name)
+            self._game.player_buy(self, self.coins, card_name)
         else:
             logger.error('Player %s asked to buy,' % self.name
                          + ' but he is not allowed to, or name is missing.')
 
 
+    def buy_card(self, card):
+        """ buy a card: pay the price, and add the card to the discard pile """
+        self.discard.append(card)
+        self.buys -= 1
+        self.coins -= card.cost
+        logger.info('%s buys %s (%d left)' % (self.name, card.name, card.qty_left))
+
+
     def ntf_buy(self, player, card):
         """ A player (maybe me) just bought a card. """
-        if player.name == self.name:
-            self.discard.append(card)
-            self.buys -= 1
-            self.coins -= card.cost
-            logger.info('%s buys %s' % (self.name, card.name))
         data = {'player': player.serialize(),
                 'card': card.serialize()}
         self.send('buy', data)
@@ -420,8 +423,8 @@ class Player():
                 'card': card.serialize()
                 }
         self.send('startPlayCard', data)
-        
-        
+
+
     def ntf_end_play_card(self, player, card):
         """ A card is done with its effects.
         """
@@ -429,5 +432,5 @@ class Player():
                 'card': card.serialize()
                 }
         self.send('endPlayCard', data)
-        
+
 

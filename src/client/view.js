@@ -258,9 +258,11 @@ function GameView() {
     deck.children('.stackCounter').text(value + "");
   }
 
-  this.setDiscard = function(pos, value, topCardType) {
+  // set discard size and top card of player in position pos
+  this.setDiscard = function(pos, size, topCardType) {
     var discard = $('#' + pos + _discard);
-    discard.children('.stackCounter').text(value + "");
+    if (size)
+      discard.children('.stackCounter').text(size + "");
     var card = this.newCard(topCardType);
     if (pos != _player)
       card = this.shrinkCard(card)
@@ -276,7 +278,7 @@ function GameView() {
   // [_right,_discard].
   // if card is the source: [_card,card]
   this.delay = 0;
-  this.defaultDelay = 200;
+  this.defaultDelay = 50;
   this.moveCard = function(source, destination, ctype, afterMoveAnimation) {
     // var startPoint = coordinates[source]
     var animEasing = "easeInOutExpo";
@@ -511,6 +513,7 @@ function GameView() {
       }
     }
     
+    $(card).draggable("disable");    
     this.delay += this.defaultDelay;
     setTimeout(function() {
       $(card).show();
@@ -720,6 +723,9 @@ function GameView() {
         'class' : 'smallDeck faceDown'
       })
     }
+    card.draggable({});
+    card.draggable("disable");
+    
     return card;
   }
 
@@ -985,7 +991,7 @@ function GameView() {
     this.reArrangeHand(pos);
   }
 
-  var cardSeparation = 30;
+  var cardSeparation = 50;
   this.reArrangeHand = function(pos) {
     var curTop = 0;
     var curLeft = 0;
@@ -1065,11 +1071,8 @@ function GameView() {
   }
 
   this.addCardToDiscard = function(card, pos) {
-    if (pos == "player")
-      classType = ".card";
-    else
-      classType = ".smallDiscard";
-    $($('#' + pos + 'Discard').children(classType)).remove();
+    classType = ".card";
+    $('#' + pos + 'Discard ' + classType).remove();
     card.css({
       top : 0,
       left : 0,
@@ -1078,6 +1081,14 @@ function GameView() {
     if (pos == _player)
       card.draggable("disable");
     $('#' + pos + 'Discard').append(card);
+    
+    /* Don't set it here! Model should do it
+    var counter = $('#' + pos + 'Discard .stackCounter');
+    var num = counter.text();
+    var qty = parseInt(num) + 1
+    counter.text(qty);
+    */
+
   }
 
   /** ************************************************************* */
