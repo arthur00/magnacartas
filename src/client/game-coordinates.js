@@ -5,25 +5,25 @@ function Coordinates() {
   coordinates = {
       'player' : {
         'Hand' : [$('#playerHand').offset().left,$('#playerHand').offset().top],
-        'Mat' : [512,610-160],
+        'Mat' : [$('#playerMat').offset().left,$('#playerMat').offset().top],
         'Deck' : [$('#playerDeck').offset().left, $('#playerDeck').offset().top],
         'Discard' : [$('#playerDiscard').offset().left, $('#playerDiscard').offset().top]
       },
       'left' : {
-        'Hand' : [50,240],
-        'Mat' : [50+80,240],
+        'Hand' : [$('#leftHand').offset().left,$('#leftHand').offset().top],
+        'Mat' : [$('#leftMat').offset().left,$('#leftMat').offset().top],
         'Deck' : [$('#leftDeck').offset().left, $('#leftDeck').offset().top],
         'Discard' : [$('#leftDiscard').offset().left, $('#leftDiscard').offset().top]
       },
       'right' : {
-        'Hand' : [1024-50,240],
-        'Mat' : [1024-50-80,240],
+        'Hand' : [$('#playerRight').offset().left,$('#playerRight').offset().top],
+        'Mat' : [$('#rightMat').offset().left,$('#rightMat').offset().top],
         'Deck' : [$('#rightDeck').offset().left, $('#rightDeck').offset().top],
         'Discard' : [$('#rightDiscard').offset().left, $('#rightDiscard').offset().top]
       },
       'across' : {
         'Hand' : [$('#acrossHand').offset().left,$('#acrossHand').offset().top],
-        'Mat' : [512,100],
+        'Mat' : [$('#acrossMat').offset().left,$('#acrossMat').offset().top],
         'Deck' : [$('#acrossDeck').offset().left, $('#acrossDeck').offset().top],
         'Discard' : [$('#acrossDiscard').offset().left, $('#acrossDiscard').offset().top]
       },
