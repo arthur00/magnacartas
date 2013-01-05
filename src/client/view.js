@@ -844,6 +844,7 @@ function GameView() {
           return false;
         }
       },
+      cursor: "move",
       distance: 20,
       revertDuration : GAMEVIEW.revertAnimationDuration,
       // containment : '#gameBoard',
