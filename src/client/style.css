@@ -133,6 +133,7 @@ img {
         text-align: center;
         color: silver;
         margin: 8px;
+        font-family: Times, "Times New Roman", Georgia, serif;
       }
 
       .card>.cost {
@@ -141,7 +142,16 @@ img {
         color: gold;
         position: absolute;
         top: 6px;
-        right: 8px;
+        right: 5px;
+      }
+
+      .card>.fame {
+        font-size: 12px;
+        font-weight: bold;
+        color: MediumSeaGreen;
+        position: absolute;
+        top: 6px;
+        left: 5px;
       }
 
       .card>.effect {
@@ -175,8 +185,8 @@ img {
 .stackCounter {
   background-color: aliceblue;
   position: absolute;
-  top: 0;
-  left: 0;
+  bottom: 0;
+  right: 0;
   display: block;
   font-size: 12px;
   width: 15px;

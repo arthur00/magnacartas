@@ -176,10 +176,10 @@ function GameModel(playerId) {
   }
 
   // user clicked on end turn btn
-  this.endMyTurn = function () {
+  this.endMyTurn = function() {
     GAMECOMM.sendEndMyTurn()
   }
-  
+
   /**
    * 
    * mechanics
@@ -193,7 +193,7 @@ function GameModel(playerId) {
     self.coins = 0
     self.addResources(effect)
   }
-  
+
   // add resources about the current player
   // and re-display the counters in the view
   this.addResources = function(effect) {
@@ -209,7 +209,6 @@ function GameModel(playerId) {
     GAMEVIEW.setResource(self.actions, self.buys, self.coins)
   }
 
-  
   /**
    * 
    * network callbacks
@@ -295,14 +294,29 @@ function GameModel(playerId) {
     var buyGridDims = GAMEVIEW.getBuyingStackSize()
     var i = 0, j = 0, k = 0
     var piles = []
+    var cardAttrs = [ 'actions', 'coins', 'draws', 'buys' ]
+    // 'briggable' and 'fame' are other available attrs
     while (i < args.piles.length) {
       var card = args.piles[i]
+      // prepare the card text: display the effects
+      var effectTexts = [];
+      var attrName;
+      var cardTxt = '';
+      for ( var attrIndex = 0, max = cardAttrs.length; attrIndex < max; attrIndex++) {
+        attrName = cardAttrs[attrIndex]
+        if (attrName in card) {
+          effectTexts.push(card[attrName] + ' ' + attrName)
+        }
+      }
+      cardTxt = effectTexts.join('<br/>')
+      card.effectTxt = cardTxt
       self.cardData[card.name] = card
+      // prepare the buying pile for that card
       var pile = {
         'ctype' : card.name,
         'num' : card.qtyLeft,
         'pos' : {
-          'x' : j,
+          'x' : j,// coords in buying area's grid
           'y' : k
         }
       }

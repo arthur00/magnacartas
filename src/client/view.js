@@ -811,13 +811,20 @@ function GameView() {
     var $cost = $('<span/>').text(c.cost).attr({
       'class' : 'cost'
     });
-    var $effects = $('<span/>').html(c.effect).attr({
+    // only add fame text if the card brings fame at the end of the game
+    var $fame= $('<span/>')
+    if ('fame' in c) {
+      $fame.text(c.fame).attr({
+        'class' : 'fame'
+      });
+    }
+    var $effects = $('<span/>').html(c.effectTxt).attr({
       'class' : 'effect'
     });
 
     var $card = $('<div/>').attr({
       'class' : 'card _c_' + ctype,
-    }).append($title, $cost, $img, $effects);
+    }).append($fame, $title, $cost, $img, $effects);
 
     $card.draggable({
       start : function() {
