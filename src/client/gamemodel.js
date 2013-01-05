@@ -375,7 +375,7 @@ function GameModel(playerId) {
   this.cleanupPhase = function(args) {
     var pname = args.player.name
     if (pname == self.myName) {
-      self.myTurn = true
+      self.myTurn = false
     }
     self.players[pname].endTurn(args.num, args.top.name)
   }
