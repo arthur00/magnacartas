@@ -55,7 +55,8 @@ function GameView() {
     "player" : 0,
     "across" : 0,
     "left" : 0,
-    "right" : 0
+    "right" : 0,
+    "tableau" : 0
   }
 
   // this.init = function() {
@@ -389,6 +390,9 @@ function GameView() {
         // TBD: Do we need this ever? Except when reshuffling, but that should
         // be separate..
       }
+      else if (source[1] == _tableau) {
+        GAMEVIEW.cardsInHand[_tableau] -= 1;
+      }
     }
     // Use the created card and send it to the destination
     if (!startPoint) {
@@ -434,10 +438,8 @@ function GameView() {
       else if (destination[1] == _hand) {
         // Adjust endpoint to account number of cards in hand
         // Add visual information of how many cards the player has
-        GAMEVIEW.cardsInHand[destination[0]] += 1;
         if (destination[0] == _player) {
-          moveAnimation.left += cardSeparation
-              * GAMEVIEW.cardsInHand[destination[0]];
+          moveAnimation.left += cardSeparation * GAMEVIEW.cardsInHand[destination[0]];
           afterMoveAnimation = function(_card_) {
             _card_.remove();
             GAMEVIEW.addCardToHand(_player, GAMEVIEW.newCard(ctype));
@@ -454,6 +456,7 @@ function GameView() {
             _card_.remove();
           }
         }
+        GAMEVIEW.cardsInHand[destination[0]] += 1;
       } else if (destination[1] == _deck) {
         if (destination[0] != _player)
           destinationSize = "small";
@@ -470,6 +473,8 @@ function GameView() {
             _card_.remove();
         }
       } else if (destination[1] == _tableau) {
+        moveAnimation.left += cardSeparation * GAMEVIEW.cardsInHand[_tableau];
+        GAMEVIEW.cardsInHand[_tableau] += 1;
         destinationSize = "normal";
         afterMoveAnimation = function(_card_) {
           GAMEVIEW.addCardToTableau(_card_);
@@ -821,25 +826,11 @@ function GameView() {
 
     $card.draggable({
       start : function() {
-        /*
-        $(this).css({
-          rotate : '',
-          x : '',
-          y : '',
-          transform : ''
-        });*/
         GAMEVIEW.cardsInHand[_player] -= 1;
         GAMEVIEW.curDrag = $(this);
         GAMEMODEL.startDraggingCard($(this));
       },
       stop : function() {
-        /*
-        $(this).css({
-          rotate : '',
-          x : '',
-          y : '',
-          transform : ''
-        });*/
         GAMEMODEL.stopDraggingCard($(this));
       },
       revert : function(socketObj) {
@@ -1061,8 +1052,8 @@ function GameView() {
       var startZ = zlayer1;
 
     if (pos == _player || pos == _tableau) {
-      if (cards.length < 5) {
-        playerCardSeparation = 105;
+      if (cards.length < 6) {
+        playerCardSeparation = 100;
       }
       else {
         playerCardSeparation = Math.floor(600/cards.length);
