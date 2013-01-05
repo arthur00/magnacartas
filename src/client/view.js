@@ -1209,6 +1209,7 @@ function GameView() {
       this.moveCard([ _card, $(cardsTableau[i]) ], [ destination, _discard ],
           cardsTableau[i]);
     }
+    this.cardsInHand[_tableau] = 0;
   }
 
   this.cleanHand = function(source) {
