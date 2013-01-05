@@ -320,6 +320,8 @@ function GameView() {
     // If source is a card, no need to create one to move.
     if (source[0] == _card) {
       card = source[1];
+      if (!ctype)
+        ctype = GAMEMODEL.getCtypeFromCard(card);
     } else {
       startPoint = coordinates[source[0]][source[1]];
       // Am I moving a card from someone's hand? If so, actually remove it from
@@ -795,6 +797,7 @@ function GameView() {
     return card;
   }
 
+  this.curDrag = null;
   // Creates a new card of ctype.
   this.newCard = function(ctype) {
 
@@ -818,31 +821,31 @@ function GameView() {
 
     $card.draggable({
       start : function() {
+        /*
         $(this).css({
           rotate : '',
           x : '',
           y : '',
           transform : ''
-        });
+        });*/
         GAMEVIEW.cardsInHand[_player] -= 1;
+        GAMEVIEW.curDrag = $(this);
         GAMEMODEL.startDraggingCard($(this));
       },
       stop : function() {
+        /*
         $(this).css({
           rotate : '',
           x : '',
           y : '',
           transform : ''
-        });
+        });*/
         GAMEMODEL.stopDraggingCard($(this));
       },
       revert : function(socketObj) {
         if (socketObj === false) {
-          setTimeout(function() {
-            GAMEVIEW.reArrangeHand(_player);
-          }, GAMEVIEW.revertAnimationDuration);
-          GAMEVIEW.cardsInHand[_player] += 1;
-          return true;
+          GAMEVIEW.moveCard(["card",GAMEVIEW.curDrag],[_player,_hand]);
+          return false;
         } else {
           setTimeout(function() {
             GAMEVIEW.reArrangeHand(_player)
@@ -850,6 +853,7 @@ function GameView() {
           return false;
         }
       },
+      distance: 20,
       revertDuration : GAMEVIEW.revertAnimationDuration,
       // containment : '#gameBoard',
       stack : '.card',
@@ -1024,8 +1028,25 @@ function GameView() {
     this.reArrangeHand(pos);
   }
 
-  var cardSeparation = 50;
+  this.unPopCard = function() {
+    if (curPop) {
+      $(curPop).css({'top':'0', 'z-index':'-='+popZ});
+      curPop = null;
+      curPopZ = 0;
+    }
+  }
+
+  $('#gameBoard').click(function() {
+    GAMEVIEW.unPopCard();
+  });
+  var cardSeparation = 70;
+  var curPop = null;
+  var popZ = 50;
   this.reArrangeHand = function(pos) {
+    if (curPop) {
+      $(curPop).css({'top':'0', 'z-index':'+='+popZ});
+      curPop = null;
+    }
     var curTop = 0;
     var curLeft = 0;
     if (pos == _tableau)
@@ -1040,14 +1061,38 @@ function GameView() {
       var startZ = zlayer1;
 
     if (pos == _player || pos == _tableau) {
+      if (cards.length < 5) {
+        playerCardSeparation = 105;
+      }
+      else {
+        playerCardSeparation = Math.floor(600/cards.length);
+      }
       for (i = 0; i < cards.length; i++) {
         $(cards[i]).css({
           'left' : curLeft,
           'top' : 0,
-          position : 'absolute',
+          'position' : 'absolute',
           'z-index' : startZ++
         });
-        curLeft += cardSeparation;
+        
+        if (pos == _player) {
+          $(cards[i]).unbind("click");
+          $(cards[i]).click(function(e) {
+            if (curPop) {
+              $(curPop).css({'top':'0','z-index':'-='+popZ});
+            }
+            if (curPop == this) {
+              curPop = null;
+            }
+            else {
+              curPop = this;
+              $(curPop).css({'top':'-50','z-index':'+='+popZ});
+            }
+            e.stopPropagation();
+          }
+          );
+        }
+        curLeft += playerCardSeparation;
       }
     } else if (pos == _left) {
       for (i = 0; i < cards.length; i++) {
