@@ -1,6 +1,6 @@
 from logger import logger
 from player import Player
-from server.card import pick_piles, CopperCard, CartographerCard
+from server.card import pick_piles, CopperCard, CommodoreCard
 from tornadocomm import set_gateway, start_server
 
 
@@ -42,6 +42,15 @@ class PirateGame():
     def cur_player(self):
         return self.table[self._curindex]
 
+    @property
+    def prev_player(self):
+        index = (self._curindex - 1) % len(self.table)
+        return self.table[index]
+
+    @property
+    def next_player(self):
+        index = (self._curindex + 1) % len(self.table)
+        return self.table[index]
 
 
     def get_player(self, pname):
@@ -107,8 +116,8 @@ class PirateGame():
         # prepare the players decks
         player_decks = {}
         for player in self.table:
-            deck = [CopperCard(self) for _ in range(4)]
-            deck += [CartographerCard(self) for _ in range(6)]
+            deck = [CopperCard(self) for _ in range(7)]
+            deck += [CommodoreCard(self) for _ in range(3)]
             player_decks[player] = deck
         # send the table seating and the card piles
         self.game_started = True
