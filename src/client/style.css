@@ -292,10 +292,7 @@ img {
 #buyPhaseBtn, #EndTurnBtn {
   float: left;
   height: 100%;
-}
-
-#EndTurnBtn {
-	display: None;
+  display: none;
 }
 
 #playerArea{

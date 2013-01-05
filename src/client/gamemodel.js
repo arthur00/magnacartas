@@ -68,7 +68,6 @@ function GameModel(playerId) {
     GAMEVIEW.setDeck(pos, value);
   }
 
-
   /** ****************************************** */
   /** ** Helper *** */
   /** ****************************************** */
@@ -176,13 +175,25 @@ function GameModel(playerId) {
     GAMECOMM.sendPlayAllMyMoneys()
   }
 
+  // user clicked on end turn btn
+  this.endMyTurn = function () {
+    GAMECOMM.sendEndMyTurn()
+  }
+  
   /**
    * 
    * mechanics
    * 
    */
 
-  // 
+  // set resources, then update the view
+  this.setResources = function(effect) {
+    self.actions = 0
+    self.buys = 0
+    self.coins = 0
+    self.addResources(effect)
+  }
+  
   // add resources about the current player
   // and re-display the counters in the view
   this.addResources = function(effect) {
@@ -198,6 +209,7 @@ function GameModel(playerId) {
     GAMEVIEW.setResource(self.actions, self.buys, self.coins)
   }
 
+  
   /**
    * 
    * network callbacks
@@ -322,16 +334,22 @@ function GameModel(playerId) {
   // A player starts his turn.
   // args = {'player':{'name':'arthur'}, 'effect':{'actions':1,'buys':1}}
   this.startPhase = function(args) {
+    self.setResources(args.effect)
     var pname = args.player.name
-    self.addResources(args.effect)
+    if (pname == self.myName) {
+      self.myTurn = true
+      GAMEVIEW.toMyStartPhase()
+    }
+
   }
 
   // A player starts his action phase.
+  // show the recruit button
   // args = {'player':{'name':'arthur'}}
   this.actionPhase = function(args) {
     var pname = args.player.name
     if (pname == self.myName) {
-      self.myTurn = true
+      GAMEVIEW.toMyActionPhase()
     }
   }
 
@@ -342,6 +360,9 @@ function GameModel(playerId) {
   // from tableau + hand, and the top card of his discard pile is a Copper
   this.cleanupPhase = function(args) {
     var pname = args.player.name
+    if (pname == self.myName) {
+      self.myTurn = true
+    }
     self.players[pname].endTurn(args.num, args.top.name)
   }
 
@@ -391,7 +412,7 @@ function GameModel(playerId) {
     }
     // allow the view to buy stuffs only if it's my turn
     if (self.myName == pname) {
-      GAMEVIEW.enableBuyingStacks(buyableCards)
+      GAMEVIEW.toMyBuyPhase(buyableCards)
     }
 
   }
@@ -488,7 +509,7 @@ function GameModel(playerId) {
     self.players[pname].deckSize = numCards
     var playerArea = self.players[pname].viewArea
     GAMEVIEW.setDeck(playerArea, numCards)
-
+    GAMEVIEW.setDiscard(playerArea, 0, null);
   }
 
   // callback from server
@@ -558,11 +579,12 @@ function Player(playerData, viewArea) {
     }
     GAMEVIEW.setDiscard(self.viewArea, self.discard.size, cardName)
   }
-  
+
   // set my discard area
   this.endTurn = function(size, topName) {
     self.discard.size += size
     self.discard.top = topName
     GAMEVIEW.endTurnClean(self.viewArea, self.discard.size, topName);
+
   }
 }

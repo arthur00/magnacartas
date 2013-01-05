@@ -100,6 +100,10 @@ function GameView() {
     GAMEMODEL.toBuyPhase()
   });
 
+  $('#endTurnBtn').click(function(e) {
+    GAMEMODEL.endMyTurn()
+  });
+
   /** ************************************ */
   /* Droppables */
   /** ************************************ */
@@ -201,7 +205,7 @@ function GameView() {
       'pointer-events' : 'auto'
     });
   }
-  
+
   this.animationDisableView = function() {
     $('#boardLock').css({
       'pointer-events' : 'none'
@@ -273,16 +277,21 @@ function GameView() {
   // set discard size and top card of player in position pos
   this.setDiscard = function(pos, size, topCardType) {
     var discard = $('#' + pos + _discard);
-    if (size) {
-      discard.children('.stackCounter').text(size + "");
+    discard.children('.stackCounter').text(size);
+    var card = null;
+    if (topCardType) {
+      var card = this.newCard(topCardType);
+      if (pos != _player) {
+        card = this.shrinkCard(card)
+      }
     }
-    var card = this.newCard(topCardType);
-    if (pos != _player) {
-      card = this.shrinkCard(card)
-    }
+
+    // Set discard after all current animations are completed
+    // Current animation start = GAMEVIEW.delay
+    // Duration of one animation = GAMEVIEW.defaultSpeed
     setTimeout(function() {
       GAMEVIEW.addCardToDiscard(card, pos);
-    },GAMEVIEW.delay);
+    }, GAMEVIEW.delay+GAMEVIEW.defaultSpeed);  
   }
 
   /** ************************************************************* */
@@ -293,12 +302,16 @@ function GameView() {
   // Source: tuple [source player, area]. E.g. [_player,_hand], [_left,_mat],
   // [_right,_discard].
   // if card is the source: [_card,card]
+  
+  //Current animation start = GAMEVIEW.delay
   this.delay = 0;
+  // Delay between two move card animations
   this.defaultDelay = 50;
+  // Duration of one animation = GAMEVIEW.defaultSpeed
+  this.defaultSpeed = 600;
   this.moveCard = function(source, destination, ctype, afterMoveAnimation) {
     // var startPoint = coordinates[source]
     var animEasing = "easeInOutExpo";
-    var speed = 900;
     var sourceSize = "normal";
     var destinationSize = "normal";
 
@@ -542,7 +555,7 @@ function GameView() {
     setTimeout(function() {
       $(card).show();
       $(card).animate(moveAnimation, {
-        duration : speed,
+        duration : GAMEVIEW.defaultSpeed,
         easing : animEasing,
         complete : function() {
           GAMEVIEW.delay -= GAMEVIEW.defaultDelay;
@@ -619,9 +632,6 @@ function GameView() {
         GAMEMODEL.dblClickBuy($(this));
       });
     }
-    // buttons
-    $('#buyPhaseBtn').hide()
-    $('#EndTurnBtn').show()
   }
 
   // remove the double click callback
@@ -1094,16 +1104,18 @@ function GameView() {
   }
 
   this.addCardToDiscard = function(card, pos) {
-    classType = ".card";
-    $('#' + pos + 'Discard ' + classType).remove();
-    card.css({
-      top : 0,
-      left : 0,
-      'z-index' : 0
-    });
-    if (pos == _player)
-      card.draggable("disable");
-    $('#' + pos + 'Discard').append(card);
+    // if card is null, discard is empty, just remove
+    $('#' + pos + 'Discard .card').remove();
+    if (card) {
+      card.css({
+        top : 0,
+        left : 0,
+        'z-index' : 0
+      });
+      if (pos == _player)
+        card.draggable("disable");
+      $('#' + pos + 'Discard').append(card);
+    }
 
     /*
      * Don't set it here! Model should do it var counter = $('#' + pos +
@@ -1117,7 +1129,26 @@ function GameView() {
   /* Phase transitions */
   /** ************************************************************* */
 
+  // nothing to do for now
+  this.toMyStartPhase = function() {
+    // TODO: show I am the current player
+  }
+
+  // show the recruit button
+  this.toMyActionPhase = function() {
+    $('#buyPhaseBtn').show()
+  }
+
+  // hide the recruit button and show the end turn btn
+  this.toMyBuyPhase = function(buyableCards) {
+    $('#buyPhaseBtn').hide()
+    $('#endTurnBtn').show()
+    GAMEVIEW.enableBuyingStacks(buyableCards)
+  }
+
+  // clean the tableau and the player's hand
   this.endTurnClean = function(pos, discardValue, discardTop) {
+    $('#endTurnBtn').hide()
     this.showBuyingBoard(_close);
     this.cleanTableau(pos);
     this.cleanHand(pos);
