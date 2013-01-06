@@ -559,30 +559,50 @@ function GameView() {
     GAMEVIEW.animationDisableView();
     $(card).draggable("disable");
     this.delay += this.defaultDelay;
-    setTimeout(function() {
-      $(card).show();
-      $(card).animate(moveAnimation, {
-        duration : GAMEVIEW.defaultSpeed,
-        easing : animEasing,
-        complete : function() {
+   
+      setTimeout(function() {
+        $(card).show();
+        if (document.hasFocus()) {
+          $(card).show();
+          $(card).animate(moveAnimation, {
+            duration : GAMEVIEW.defaultSpeed,
+            easing : animEasing,
+            complete : function() {
+              GAMEVIEW.delay -= GAMEVIEW.defaultDelay;
+              if (GAMEVIEW.delay == 0)
+                GAMEVIEW.animationEnableView();
+              if (afterMoveAnimation) {
+                $(card).css({
+                  'position' : 'absolute',
+                  'z-index' : 0,
+                  'top' : 0,
+                  'left' : 0,
+                  'right' : 0,
+                  'bottom' : 0
+                });
+                afterMoveAnimation($(card));
+              }
+            },
+            step : stepAnim
+          });
+        }
+        else {
           GAMEVIEW.delay -= GAMEVIEW.defaultDelay;
           if (GAMEVIEW.delay == 0)
-            GAMEVIEW.animationEnableView();
+                GAMEVIEW.animationEnableView();
           if (afterMoveAnimation) {
             $(card).css({
-              'position' : 'absolute',
-              'z-index' : 0,
-              'top' : 0,
-              'left' : 0,
-              'right' : 0,
-              'bottom' : 0
-            });
+                    'position' : 'absolute',
+                    'z-index' : 0,
+                    'top' : 0,
+                    'left' : 0,
+                    'right' : 0,
+                    'bottom' : 0
+                  });
             afterMoveAnimation($(card));
           }
-        },
-        step : stepAnim
-      });
-    }, this.delay);
+        }
+      }, this.delay);
 
     // Reorganize hand of player, if card came from someone's hand.
     if (source[1] == _hand)
