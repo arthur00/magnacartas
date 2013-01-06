@@ -159,19 +159,8 @@ function GameView() {
   /** **************************************** */
   /* Hacks */
   /** **************************************** */
-  // Hack to add cards, should be removed on deployment
-  $('#playerDiscard').click(function() {
-    GAMEVIEW.addCardToHand(_left);
-    GAMEVIEW.addCardToHand(_right);
-    GAMEVIEW.addCardToHand(_across);
-  });
 
-  // wire the logic in deck drawing
-  $('#playerDeck').click(function() {
-    var $card = GAMEVIEW.newCard('blackBeard');
-    GAMEVIEW.addCardToHand(_player, $card);
-  });
-
+  /* End of Hacks */
   // } // End init
 
   this.disableOtherEvents = function(container) {
@@ -1158,6 +1147,7 @@ function GameView() {
       x : 0,
       y : 0
     });
+    $(card).unbind("click");
     card.draggable("disable");
     $('#actionTableau').append(card);
     cards = $('#actionTableau').children();
@@ -1169,6 +1159,7 @@ function GameView() {
 
   this.addCardToDiscard = function(card, pos) {
     // if card is null, discard is empty, just remove
+    $(card).unbind("click");
     $('#' + pos + 'Discard .card').remove();
     if (card) {
       card.css({
