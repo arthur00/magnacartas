@@ -1161,6 +1161,7 @@ function GameView() {
     // if card is null, discard is empty, just remove
     $(card).unbind("click");
     $('#' + pos + 'Discard .card').remove();
+    $('#' + pos + 'Discard .smallCard').remove();
     if (card) {
       card.css({
         top : 0,
@@ -1203,6 +1204,8 @@ function GameView() {
 
   // clean the tableau and the player's hand
   this.endTurnClean = function(pos, discardValue, discardTop) {
+    // Hack! For some reason, the setDiscard setTimeout is not running after the card animations.
+    // Quick fix: Change afterMoveAnimation to destroy the card that is moved to the discardPile
     $('#endTurnBtn').hide()
     this.showBuyingBoard(_close);
     this.cleanTableau(pos);
@@ -1218,7 +1221,7 @@ function GameView() {
     this.reArrangeHand(_tableau);
     for (i = 0; i < cardsTableau.length; i++) {
       this.moveCard([ _card, $(cardsTableau[i]) ], [ destination, _discard ],
-          cardsTableau[i]);
+          cardsTableau[i], function(_card_) { _card_.remove(); });
     }
     this.cardsInHand[_tableau] = 0;
   }
@@ -1250,7 +1253,7 @@ function GameView() {
         "rotate" : 0
       });
       this.moveCard([ _card, $(cardsHand[i]) ], [ source, _discard ],
-          cardsHand[i]);
+          cardsHand[i], function(_card_) { _card_.remove(); });
     }
   }
 
