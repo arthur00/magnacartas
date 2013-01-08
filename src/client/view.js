@@ -159,19 +159,8 @@ function GameView() {
   /** **************************************** */
   /* Hacks */
   /** **************************************** */
-  // Hack to add cards, should be removed on deployment
-  $('#playerDiscard').click(function() {
-    GAMEVIEW.addCardToHand(_left);
-    GAMEVIEW.addCardToHand(_right);
-    GAMEVIEW.addCardToHand(_across);
-  });
 
-  // wire the logic in deck drawing
-  $('#playerDeck').click(function() {
-    var $card = GAMEVIEW.newCard('blackBeard');
-    GAMEVIEW.addCardToHand(_player, $card);
-  });
-
+  /* End of Hacks */
   // } // End init
 
   this.disableOtherEvents = function(container) {
@@ -559,30 +548,50 @@ function GameView() {
     GAMEVIEW.animationDisableView();
     $(card).draggable("disable");
     this.delay += this.defaultDelay;
-    setTimeout(function() {
-      $(card).show();
-      $(card).animate(moveAnimation, {
-        duration : GAMEVIEW.defaultSpeed,
-        easing : animEasing,
-        complete : function() {
+   
+      setTimeout(function() {
+        $(card).show();
+        if (document.hasFocus()) {
+          $(card).show();
+          $(card).animate(moveAnimation, {
+            duration : GAMEVIEW.defaultSpeed,
+            easing : animEasing,
+            complete : function() {
+              GAMEVIEW.delay -= GAMEVIEW.defaultDelay;
+              if (GAMEVIEW.delay == 0)
+                GAMEVIEW.animationEnableView();
+              if (afterMoveAnimation) {
+                $(card).css({
+                  'position' : 'absolute',
+                  'z-index' : 0,
+                  'top' : 0,
+                  'left' : 0,
+                  'right' : 0,
+                  'bottom' : 0
+                });
+                afterMoveAnimation($(card));
+              }
+            },
+            step : stepAnim
+          });
+        }
+        else {
           GAMEVIEW.delay -= GAMEVIEW.defaultDelay;
           if (GAMEVIEW.delay == 0)
-            GAMEVIEW.animationEnableView();
+                GAMEVIEW.animationEnableView();
           if (afterMoveAnimation) {
             $(card).css({
-              'position' : 'absolute',
-              'z-index' : 0,
-              'top' : 0,
-              'left' : 0,
-              'right' : 0,
-              'bottom' : 0
-            });
+                    'position' : 'absolute',
+                    'z-index' : 0,
+                    'top' : 0,
+                    'left' : 0,
+                    'right' : 0,
+                    'bottom' : 0
+                  });
             afterMoveAnimation($(card));
           }
-        },
-        step : stepAnim
-      });
-    }, this.delay);
+        }
+      }, this.delay);
 
     // Reorganize hand of player, if card came from someone's hand.
     if (source[1] == _hand)
@@ -1138,6 +1147,7 @@ function GameView() {
       x : 0,
       y : 0
     });
+    $(card).unbind("click");
     card.draggable("disable");
     $('#actionTableau').append(card);
     cards = $('#actionTableau').children();
@@ -1149,7 +1159,9 @@ function GameView() {
 
   this.addCardToDiscard = function(card, pos) {
     // if card is null, discard is empty, just remove
+    $(card).unbind("click");
     $('#' + pos + 'Discard .card').remove();
+    $('#' + pos + 'Discard .smallCard').remove();
     if (card) {
       card.css({
         top : 0,
@@ -1192,6 +1204,8 @@ function GameView() {
 
   // clean the tableau and the player's hand
   this.endTurnClean = function(pos, discardValue, discardTop) {
+    // Hack! For some reason, the setDiscard setTimeout is not running after the card animations.
+    // Quick fix: Change afterMoveAnimation to destroy the card that is moved to the discardPile
     $('#endTurnBtn').hide()
     this.showBuyingBoard(_close);
     this.cleanTableau(pos);
@@ -1207,7 +1221,7 @@ function GameView() {
     this.reArrangeHand(_tableau);
     for (i = 0; i < cardsTableau.length; i++) {
       this.moveCard([ _card, $(cardsTableau[i]) ], [ destination, _discard ],
-          cardsTableau[i]);
+          cardsTableau[i], function(_card_) { _card_.remove(); });
     }
     this.cardsInHand[_tableau] = 0;
   }
@@ -1239,7 +1253,7 @@ function GameView() {
         "rotate" : 0
       });
       this.moveCard([ _card, $(cardsHand[i]) ], [ source, _discard ],
-          cardsHand[i]);
+          cardsHand[i], function(_card_) { _card_.remove(); });
     }
   }
 
