@@ -112,7 +112,7 @@ class PirateGame():
         """
 
         # start the game
-        self.piles = pick_piles(2)
+        self.piles = pick_piles(10)
         # prepare the players decks
         player_decks = {}
         for player in self.table:

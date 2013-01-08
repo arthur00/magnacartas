@@ -43,13 +43,15 @@ class Card():
 ###########################  money  #############################
 
 class MoneyCard(Card):
-    coins = 0 # 1 for copper, 3 for gold
-
+    
     def serialize(self):
         d = {'coins': self.coins}
         d.update(Card.serialize(self))
         return d
 
+    def do_effect(self):
+        self._game.cur_player.add_resources(Resource(coins=self.coins))
+        
 class CopperCard(MoneyCard):
     img = 'img/copper.jpg'
     name = 'Copper'
@@ -86,7 +88,7 @@ class PirateCard(Card):
     draws = 0
     buys = 0
     briggable = False
-
+    
 
     def serialize(self):
         d = {'desc': self.desc}
@@ -213,7 +215,7 @@ class BosunCard(PirateCard):
 class CookCard(PirateCard):
     img = 'img/cook.jpg'
     name = 'Cook'
-    cost = 5
+    cost = 4
     draws = 1
     coins = 1
     actions = 1
